@@ -26,9 +26,34 @@ from sympy import Eq, solve, symbols, solveset, simplify, S, solve_rational_ineq
 # x1 = b1 - m2
 # x2 = simplify(x1)
 # print(x2.is_negative)
+# BAC, ABC, ACB, BAK, ABK, AKB, CBK, BCK, BKC, KAM, AKM, AMK, BAM, ABM, AMB, CBM, BCM, BMC, KCM, CKM, CMK, CAM, ACM, AMC = symbols('BAC ABC ACB BAK ABK AKB CBK BCK BKC KAM AKM AMK BAM ABM AMB CBM BCM BMC KCM CKM CMK CAM ACM AMC', positive=True)
 
+# path_eq = [Eq(AMB + AMK, 180), Eq(ABM + AMB + BAM, 180), Eq(ABM, ABK)]
+# path_symbols = [AMK, ABK, AMB, ABK, BAM, AMK, ABM]
 
-BAC, ABC, ACB, BAK, ABK, AKB, CBK, BCK, BKC, KAM, AKM, AMK, BAM, ABM, AMB, CBM, BCM, BMC, KCM, CKM, CMK, CAM, ACM, AMC = symbols('BAC ABC ACB BAK ABK AKB CBK BCK BKC KAM AKM AMK BAM ABM AMB CBM BCM BMC KCM CKM CMK CAM ACM AMC', positive=True)
+# kq = solve(Eq(AMB + AMK, 180), [AMB])
+# print(kq)
+# AMB = kq[0]
+
+# kq = solve(Eq(ABM + AMB + BAM, 180), [ABM])
+# print(kq)
+# ABM = kq[0]
+
+# kq = solve( Eq(ABM, ABK), [ABK])
+# print(kq)
+# ABK = kq[0]
+# x = AMK - ABK
+# print(x)
+# quit()
+
+x = symbols('x')
+y = x + 3
+x = 1
+print(y)
+quit()
+
+BAC, ABC, ACB, BAK, AKB, CBK, BCK, BKC, KAM, AKM, BAM, ABM, AMB, CBM, BCM, BMC, KCM, CKM, CMK, CAM, ACM, AMC = symbols('BAC, ABC, ACB, BAK, AKB, CBK, BCK, BKC, KAM, AKM, BAM, ABM, AMB, CBM, BCM, BMC, KCM, CKM, CMK, CAM, ACM, AMC', positive=True)
+ABK, AMK = symbols('AMK ABK', positive=True)
 all_eqs = [Eq(AKB + BKC, 180), Eq(ABK + CBK, ABC), Eq(AMC, AMK + CMK), Eq(ABC + ACB + BAC, 180), Eq(BAK, BAC), Eq(AMB + AMK, 180), Eq(BAM + KAM, BAK), Eq(ABK + AKB + BAK, 180), Eq(BCK, ACB), Eq(BMC + CMK, 180), Eq(BCM 
 + KCM, BCK), Eq(BCK + BKC + CBK, 180), Eq(AKM, AKB), Eq(AKM + AMK + KAM, 180), Eq(ABM, ABK), Eq(ABM + AMB + BAM, 180), Eq(CBM, CBK), Eq(BCM + BMC + CBM, 180), Eq(CKM, BKC), Eq(CKM + CMK + KCM, 180), Eq(CAM, KAM), Eq(ACM, KCM), Eq(ACM + AMC + CAM, 180)]
 
@@ -65,18 +90,10 @@ all_eqs = [Eq(AKB + BKC, 180), Eq(ABK + CBK, ABC), Eq(AMC, AMK + CMK), Eq(ABC + 
 
 # print(simplify(ABK-AMK))
 
+#BAC, ABC, ACB, BAK, ABK, AKB, CBK, BCK, BKC, KAM, AKM, AMK, BAM, ABM, AMB, CBM, BCM, BMC, KCM, CKM, CMK, CAM, ACM, AMC = symbols('BAC ABC ACB BAK ABK AKB CBK BCK BKC KAM AKM AMK BAM ABM AMB CBM BCM BMC KCM CKM CMK CAM ACM AMC', positive=True)
+rel_eqs = [Eq(AMB + AMK, 180), Eq(ABM + AMB + BAM, 180), Eq(ABM, ABK)]
 
-BAC, ABC, ACB, BAK, ABK, AKB, CBK, BCK, BKC, KAM, AKM, AMK, BAM, ABM, AMB, CBM, BCM, BMC, KCM, CKM, CMK, CAM, ACM, AMC = symbols('BAC ABC ACB BAK ABK AKB CBK BCK BKC KAM AKM AMK BAM ABM AMB CBM BCM BMC KCM CKM CMK CAM ACM AMC', positive=True)
-eq1 = Eq(AMB + AMK, 180)
-eq2 = Eq(ABM + AMB + BAM, 180)
-eq3 = Eq(ABM, ABK)
-rel_eqs = [eq1, eq2, eq3]
-
-#rel_eqs = [Eq(AMC, AMK + CMK), Eq(AMB + AMK, 180), Eq(ABM + AMB + BAM, 180), Eq(AKM + AMK + KAM, 180), Eq(ABK + CBK, ABC), Eq(ABM, ABK), Eq(ABM + AMB + BAM, 180), Eq(ABK + AKB + BAK, 180)]
-kq = solve(rel_eqs, [AMB, AMK])
-print(kq)
-
-kq = solve(rel_eqs, [AMB, ABK, ABM])
+kq = solve(rel_eqs, [AMK, ABK, BAM, AMK, ABK, ABM, AMB])
 print(kq)
 
 # AMK = kq[AMK]
@@ -103,3 +120,4 @@ print(kq)
 # eqx = Eq(ABK, ABM)
 # x = (simplify(AMK-ABK))
 # print(x)
+

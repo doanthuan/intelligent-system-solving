@@ -2,6 +2,7 @@ from typing import Tuple, Type, NewType
 
 from sympy import symbols, Eq, Rational
 from equation import Equation
+from rule import Rule
 from utils import sort_name
 from vertex import Vertex
 
@@ -51,7 +52,7 @@ class Triangle:
                     return c_name
 
     def set_angle(self, vertex_name, angle):
-        if type(angle) == int:
+        if type(angle) == int or type(angle) == float:
             self.angles[vertex_name] = angle
         else:
             eq = Equation(self.angles[vertex_name], angle)
@@ -140,8 +141,25 @@ class Triangle:
 
             eq = Equation(triangle3.angles[middle_vertex], triangle1_1.angles[middle_vertex] + triangle2_2.angles[middle_vertex])
 
-            
-
             results.extend([triangle1_1, triangle1_2, triangle2_1, triangle2_2, triangle3])
 
         return results
+
+
+    
+
+
+# v1, v2, v3 = symbols('v1,v2,v3', positive=True)
+# rule_01 = Rule(
+#     [
+#         Triangle(v1, v2, v3)
+#     ],
+#     [
+#         Equation(v1 + v2 + v3, 180)
+#     ], id="luat 1"
+# )
+
+
+# # RULE01: TRIANGLE(A,B,C) => A + B + C = 180
+# def rule_01(A, B, C):
+#     return Equation(A + B + C, 180)

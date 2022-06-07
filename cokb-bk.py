@@ -1,18 +1,14 @@
 from multiprocessing import connection
-from symtable import Symbol
 from equation import Equation
 from event import Event
 from goal import Goal
 from rule import Rule
-
 from triangle import Triangle
 from sympy import false, simplify, solve, solveset, symbols, pprint
 
-from utils import remove_duplicates, sort_name, symbol
+from utils import angle, remove_duplicates, sort_name, trace_symbol
 
 from queue import Queue
-
-from solver import set_symbol
 
 
 # C : khái niệm ( điểm, tia, đoạn thẳng, góc, tam giác...)
@@ -30,14 +26,12 @@ class Cokb:
     def __init__(self):
         # Tập GT
         self.triangles = {}
-        self.knowns = []
+        self.all_eq = []
+        self.all_symbol = []
         
         # Tập KL
         self.results = {}
         self.goals = []
-
-        all_eq = []
-        all_symbol = []
 
     def add_triangle(self, triangle):
         if isinstance(triangle, str):
@@ -53,7 +47,7 @@ class Cokb:
     def get_triangle(self, name):
          return self.triangles[''.join(sorted(name))]
 
-    def get_angle(self, angel):
+    def get_angle_symbol(self, angel):
         triangle = self.triangles[sort_name(angel)]
         if triangle is None:
             raise Exception("Goal DETERMINE ANGLE error. Could not find triangle which have that angle")
@@ -62,24 +56,21 @@ class Cokb:
     
     def set_triangle(self, name):
         if len(name) != 3:
-            raise Exception("Set TRIANGLE error. Triangle's name must be 3 characters")
+            raise Exception("Event TRIANGLE error. Triangle's name must be 3 characters")
 
         self.add_triangle(name)
 
     def set_angle(self, symbol_name, symbol_value):
-        # triangle = self.triangles[sort_name(symbol_name)]
-        # if triangle is None:
-        #     raise Exception("Set angle error. Could not find triangle")
-
-        # triangle.set_angle(symbol_name[1], symbol_value)
-        
-        #self.all_symbol[sort_name(symbol_name)] = symbol_value
-        set_symbol(sort_name(symbol_name), symbol_value)
+        if type(symbol_value) == int or type(symbol_value) == float:
+            self.all_symbol[symbol_name] = symbol_value
+        else:
+            eq = Equation(self.all_symbol[symbol_name], symbol_value)
+            self.all_eq.append(eq)
 
     def set_bisector_in(self, triangle, from_v, to_v):
         triangle = self.triangles[sort_name(triangle)]
         if triangle is None:
-            raise Exception("Set BISECTOR error. Could not find triangle")
+            raise Exception("Event BISECTOR error. Could not find triangle")
 
         triangle1, triangle2 = triangle.set_bisector(from_v, to_v)
         self.add_triangle([triangle1, triangle2])
@@ -87,28 +78,86 @@ class Cokb:
     def set_ray(self, triangle, from_v, to_v, m_v):
         triangle = self.triangles[sort_name(triangle)]
         if triangle is None:
-            raise Exception("Set BISECTOR error. Could not find triangle")
+            raise Exception("Event BISECTOR error. Could not find triangle")
 
         # vẽ tia từ góc cắt cạnh đối diện tại 1 điểm, nếu đi qua 1 điểm thì vẽ thêm 2 tia phân giác với 2 góc còn lại
         triangles = triangle.set_ray(from_v, to_v, m_v)
         self.add_triangle(triangles)
+
+    
+    # @staticmethod
+    # def apply_event(obj_type, obj_data):
+    #     if obj_type == "TRIANGLE":
+    #         if len(obj_data) != 3:
+    #             raise Exception("Event TRIANGLE error. Triangle's name must be 3 characters")
+
+    #         return Triangle(obj_data)
+
+    #     if obj_type == "ANGLE":
+    #         if len(obj_data) != 2:
+    #             raise Exception("Event ANGLE error. Object data must have 2 arguments")
+
+    #         triangle = self.triangles[sort_name(obj_data[0])]
+    #         if triangle is None:
+    #             raise Exception("Event ANGLE error. Could not find triangle")
+            
+    #         triangle.set_angle(obj_data[0][1], obj_data[1])
+    #         angle(obj_data[0], obj_data[1])
+
+    #         return Equation(self.angles[vertex_name], obj_data[1])
+
+    #     if obj_type == "BISECTOR_IN":# tia phân giác trong từ 1 đỉnh, nếu cắt cạnh đối diện sẽ phát sinh 2 đối tượng tam giác mới
+    #         if len(obj_data) != 3:
+    #             raise Exception("Event BISECTOR error. Object data must have 3 arguments")
+
+    #         triangle = self.triangles[sort_name(obj_data[0])]
+    #         if triangle is None:
+    #             raise Exception("Event BISECTOR error. Could not find triangle")
+
+    #         from_vertex = obj_data[1]
+    #         to_vertex = obj_data[2]
+
+    #         triangle1, triangle2 = triangle.set_bisector(from_vertex, to_vertex)
+    #         self.add_triangle([triangle1, triangle2])
+
+    #     if obj_type == "RAY":
+    #         if len(obj_data) < 3:
+    #             raise Exception("Event BISECTOR error. Object data must have 2 or 3 arguments")
+
+    #         triangle = self.triangles[sort_name(obj_data[0])]
+    #         if triangle is None:
+    #             raise Exception("Event BISECTOR error. Could not find triangle")
+
+    #         # vẽ tia từ góc cắt cạnh đối diện tại 1 điểm, nếu đi qua 1 điểm thì vẽ thêm 2 tia phân giác với 2 góc còn lại
+    #         triangles = triangle.set_ray(*obj_data[1:])
+    #         self.add_triangle(triangles)
+    
+            
+    def add_event(self, obj_type, obj_data):
+        event = Event(obj_type, obj_data)
+        self.gt_events.append(event)
 
     def add_goal(self, goal_type, goal_data):
         goal = Goal(goal_type, goal_data)
         self.goals.append(goal)
 
     def suy_dien_tien(self):
+        
+        # áp vào danh sách các sự kiện giả thiết
+        for event in self.gt_events:
+            # func_name = "apply_event_"+ str(event.event_type)
+            # func = getattr(self, func_name)
+            # func(*event.event_data)
+            self.apply_event(event.obj_type, event.obj_data)
+
         step = 1
         found = False
-        while step < 2:
+        while step < 3:
             print(f"step {step}")
 
             # áp dụng các luật đối với các sự kiện đã có để tìm các sự kiện mới
             for triangle in self.triangles.values():
                 triangle.run_rules()
-
-            #reload knowns
-            self.load_equations_and_symbols()
 
             if self.check_finish_goals() == True: # Đã tìm thấy lời giải
                 found = True
@@ -129,12 +178,10 @@ class Cokb:
                         if len(goal_data) != 2:
                             raise Exception("Goal DETERMINE ANGLE error. Goal data must have 2 arguments")
 
-                        target_symbol = self.get_angle(goal_data[1])
+                        target_symbol = self.get_angle_symbol(goal_data[1])
 
-                        result = self.bfs2(target_symbol)
-                        print(result)
-                        quit()
-
+                        # load all equations,symbols and solve
+                        self.load_equations_and_symbols()
                         results = solve(self.all_eq, self.all_symbol)
                         self.merge_results(results)
 
@@ -150,10 +197,14 @@ class Cokb:
                         if len(goal_data) != 3:
                             raise Exception("Goal COMPARE ANGLE error. Goal data must have 3 arguments")
 
-                        symbol_1 = self.get_angle(goal_data[1])
-                        symbol_2 = self.get_angle(goal_data[2])
+                        symbol_1 = self.get_angle_symbol(goal_data[1])
+                        symbol_2 = self.get_angle_symbol(goal_data[2])
+                        
+                        # load all equations,symbols and solve
+                        self.load_equations_and_symbols()
 
                         solutions = self.find_solutions(symbol_1, symbol_2)
+
                         if self.solve_compare(solutions, symbol_1, symbol_2):
                             goal.status = True
                             return True
@@ -175,7 +226,7 @@ class Cokb:
         for path_eqs in solutions:
             print("path_eq:", path_eqs)
             path_symbols = self.get_path_symbols(path_eqs)
-            print("path_symbols:", [symbol_1, symbol_2, *path_symbols])
+            print("path_symbols:", path_symbols)
             results = solve(path_eqs, [symbol_1, symbol_2, *path_symbols])
             print(results)
 
@@ -183,17 +234,16 @@ class Cokb:
             symbol_2_res = results[symbol_2]
             x = simplify(symbol_1_res - symbol_2_res)
             print(f"x:{x}")
-            print("---------------------")
 
-            # if x == 0:
-            #     print(f"{symbol_1} = {symbol_2_res}")
-            #     return True
-            # elif x.is_positive:
-            #     print(f"{symbol_1} > {symbol_2}")
-            #     return True
-            # elif x.is_negative:
-            #     print(f"{symbol_1} < {symbol_2}")
-            #     return True
+            if x == 0:
+                print(f"{symbol_1} = {symbol_2_res}")
+                return True
+            elif x.is_positive:
+                print(f"{symbol_1} > {symbol_2}")
+                return True
+            elif x.is_negative:
+                print(f"{symbol_1} < {symbol_2}")
+                return True
 
         return False
 
@@ -219,96 +269,24 @@ class Cokb:
             # goal reached
             if target_symbol in rel_symbols:
                 print("FOUND TARGET")
-                self.trace_symbol(trace_symbols, target_symbol, checking_symbol)
+                trace_symbol(trace_symbols, target_symbol, checking_symbol)
                 found = True
                 continue
+                
+                # return True, path_eqs, path_symbols
+            else:
+                knowns.extend(rel_symbols)
 
-            knowns.extend(rel_symbols)
             # store related symbols for next checking
             for a_symbol in rel_symbols:
                 checking.put(a_symbol)
-                self.trace_symbol(trace_symbols, a_symbol, checking_symbol)
+                trace_symbol(trace_symbols, a_symbol, checking_symbol)
 
         if not found:
             print("Could not find target")
             return {}
 
         return trace_symbols
-
-    def bfs1(self, start_symbol, target_symbol):
-        # khởi tạo tập known và tập checking
-
-        checking = Queue()
-        checking.put(start_symbol)
-
-        knowns = [start_symbol]
-
-        solve_symbols = {}
-
-        # duyet
-        found = False
-        while checking.qsize() > 0:
-            checking_symbol = checking.get()
-            rel_symbols = self.get_rel_symbols(checking_symbol, knowns)
-            if len(rel_symbols) == 0:
-                continue
-
-            # goal reached
-            if target_symbol in rel_symbols:
-                print("FOUND TARGET")
-                self.solve_symbol(solve_symbols, checking_symbol, target_symbol)
-                found = True
-                continue
-
-            knowns.extend(rel_symbols)
-            for rel_symbol in rel_symbols:
-                checking.put(rel_symbol)
-                self.solve_symbol(solve_symbols, checking_symbol, rel_symbol)
-                
-
-        if not found:
-            print("Could not find target")
-            return {}
-
-        return solve_symbols
-
-    def bfs2(self, target_symbol):
-        # khởi tạo tập known
-
-        checking = Queue()
-        knowns = self.get_knowns()
-
-        solve_symbols = {}
-
-        # duyet
-        found = False
-        while target_symbol not in knowns:
-
-            rel_equations = self.get_candidate_equations(knowns)
-            if len(rel_equations) == 0:
-                return False
-
-            for a_eq in rel_equations:
-                solve(a_eq, self.knowns)
-
-            # goal reached
-            if target_symbol in rel_symbols:
-                print("FOUND TARGET")
-                self.solve_symbol(solve_symbols, checking_symbol, target_symbol)
-                found = True
-                continue
-
-            knowns.extend(rel_symbols)
-            for rel_symbol in rel_symbols:
-                checking.put(rel_symbol)
-                self.solve_symbol(solve_symbols, checking_symbol, rel_symbol)
-                
-
-        if not found:
-            print("Could not find target")
-            return {}
-
-        return solve_symbols
     
     def get_trace_path(self, trace_symbols, cur_symbol):
         current_paths = []
@@ -335,6 +313,8 @@ class Cokb:
                         current_paths.append(new_path)
 
             return current_paths
+                
+
 
     def get_path_symbols(self, path_eqs):
         # get path symbols
@@ -380,7 +360,6 @@ class Cokb:
             for a_symbol in triangle.symbols:
                 # check symbol exists
                 if not self.check_symbol_exist(a_symbol):
-                    #self.all_symbol[str(a_symbol)] = a_symbol
                     self.all_symbol.append(a_symbol)
 
     def check_equation_exist(self, eq):
@@ -407,45 +386,5 @@ class Cokb:
             return True
         return False
 
-    def trace_symbol(self, trace_path, a_symbol, parent_symbol):
-        if str(a_symbol) in trace_path:
-            old_parent = trace_path[str(a_symbol)]
-            if isinstance(old_parent, list):
-                old_parent.append(parent_symbol)
-            else:
-                parents = [old_parent, parent_symbol]
-                trace_path[str(a_symbol)] = parents
-        else:
-            trace_path[str(a_symbol)] = parent_symbol
+            
 
-
-    def solve_symbol(self, solve_symbols, from_symbol, a_symbol):
-        rel_eqs = self.get_connect_equations(from_symbol, a_symbol)
-        for eq in rel_eqs:
-            result = solve(eq,[a_symbol])[0]
-
-            if str(a_symbol) in solve_symbols:
-                solve_symbols[str(a_symbol)].append(result)
-            else:
-                solve_symbols[str(a_symbol)] = [result]
-
-    def get_knowns(self):
-        results = {}
-        for a_symbol in self.all_symbol:
-            if type(a_symbol) is not Symbol:
-                results[str(a_symbol)] = a_symbol
-
-        return results
-
-    def get_candidate_equations(self, knowns):
-        candidate_eqs = []
-        for a_eq in self.all_eq:
-            if self.count_symbol_in(knowns, a_eq.free_symbols) == len(a_eq.free_symbols) - 1:
-                candidate_eqs.append(a_eq)
-
-    def count_symbol_in(self, knowns, symbols):
-        count = 0
-        for a_symbol in symbols:
-            if a_symbol in knowns:
-                count += 1
-        return count
