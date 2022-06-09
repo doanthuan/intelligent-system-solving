@@ -5,9 +5,8 @@ class Equation:
         self.lhs = lhs
         self.rhs = rhs
         self.id = id
-
-    def get_eq(self):
-        return Eq(self.lhs, self.rhs)
+        self.eq = Eq(self.lhs, self.rhs)
+        self.free_symbols = self.eq.free_symbols
 
     def get_latex(self):
-        return latex(self.get_eq())
+        return latex(self.eq)

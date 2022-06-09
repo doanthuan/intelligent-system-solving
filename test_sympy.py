@@ -46,11 +46,6 @@ from sympy import Eq, solve, symbols, solveset, simplify, S, solve_rational_ineq
 # print(x)
 # quit()
 
-x = symbols('x')
-y = x + 3
-x = 1
-print(y)
-quit()
 
 BAC, ABC, ACB, BAK, AKB, CBK, BCK, BKC, KAM, AKM, BAM, ABM, AMB, CBM, BCM, BMC, KCM, CKM, CMK, CAM, ACM, AMC = symbols('BAC, ABC, ACB, BAK, AKB, CBK, BCK, BKC, KAM, AKM, BAM, ABM, AMB, CBM, BCM, BMC, KCM, CKM, CMK, CAM, ACM, AMC', positive=True)
 ABK, AMK = symbols('AMK ABK', positive=True)
