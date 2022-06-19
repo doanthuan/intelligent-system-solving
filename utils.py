@@ -12,4 +12,5 @@ def find_common_ele(self, list1, list2):
     return common_ele
 
 
-
+def flat_list(list):
+    return [ele for sublist in list for ele in sublist]
