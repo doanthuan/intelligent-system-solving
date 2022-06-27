@@ -1,11 +1,11 @@
 from typing import Tuple, Type, NewType
 
 from sympy import symbols, Eq, Rational
-from angle import Angle
 from equation import Equation
+from line import Line
 from relation import Relation
 from rule import Rule
-from solver import add_relation, angle, eq, symb
+from solver import add_relation, get_angle_obj, angle, eq, line, symb
 from utils import sort_name
 from vertex import Vertex
 
@@ -26,31 +26,20 @@ class Triangle:
 
     def __init__(self, name = "ABC"):
 
+        # tri name
         self.name = Triangle.triangle_name(name)
 
-        self.angleols = {}
-        self.equations = []
+        # 3 edges
+        self.edges = {}
+        self.edges[name[0]+name[1]] = Line(name[0]+name[1])
+        self.edges[name[1]+name[2]] = Line(name[1]+name[2])
+        self.edges[name[2]+name[0]] = Line(name[2]+name[0])
 
         # 3 angles
-        angle_name_1 = self.angle_name(name[0])
-        angle_name_2 = self.angle_name(name[1])
-        angle_name_3 = self.angle_name(name[2])
-
-        # self.angles = {}
-        # self.angles[name[0]] = symbols(angle_name_1, positive=True)
-        # self.angles[name[1]] = symbols(angle_name_2, positive=True)
-        # self.angles[name[2]] = symbols(angle_name_3, positive=True)
-        
-        # #self.symbols.extend([self.angles[name[0]], self.angles[name[1]], self.angles[name[2]]])
-        # angle(angle_name_1, self.angles[name[0]])
-        # angle(angle_name_2, self.angles[name[1]])
-        # angle(angle_name_3, self.angles[name[2]])
-
         self.angles = {}
-        self.angles[name[0]] = angle(angle_name_1)
-        self.angles[name[1]] = angle(angle_name_2)
-        self.angles[name[2]] = angle(angle_name_3)
-
+        self.angles[name[0]] = angle(self.angle_name(name[0]))
+        self.angles[name[1]] = angle(self.angle_name(name[1]))
+        self.angles[name[2]] = angle(self.angle_name(name[2]))
         self.angles_out = {}
 
         self.run_rules()
@@ -91,12 +80,12 @@ class Triangle:
         # angle_obj.set_value(value)
         angle(self.angle_name(vertex_name), value)
 
-    def set_angle_out(self, from_v, ray_name):
+    def set_angle_out(self, from_v, ray_name = None):
         if ray_name is None:
             ray_name = "x"
         v1, v2 = self.get_other_vertices(from_v)
         
-        self.angles_out[from_v] = angle(v1 + from_v + ray_name)
+        self.angles_out[from_v] = angle(ray_name + from_v + v1)
         
         eq(self.angles_out[from_v] + self.angles[from_v], 180)
 
@@ -104,11 +93,16 @@ class Triangle:
     # Phát sinh sự kiện: tia phân giác từ 1 góc trong tam giác, cắt cạnh đối diện tại 1 điểm thì chia đôi góc và tạo thành 2 tam giác khác
     def set_bisector_in(self, from_v, to_v):
 
-        # generate 2 new triangle
         v1, v2 = self.get_other_vertices(from_v)
 
-        tri1 = Triangle(v1+from_v+to_v)
-        tri2 = Triangle(v2+from_v+to_v)
+
+        # generate lines
+        line(from_v + to_v)
+        line(v1 + to_v)
+        line(v2 + to_v)
+
+        tri1 = Triangle(v1 + from_v + to_v)
+        tri2 = Triangle(to_v + from_v + v2)
 
         # and angle_name in new 2 triangle = angle_name/2
         eq(tri1.angles[v1], self.angles[v1])
@@ -131,10 +125,14 @@ class Triangle:
         angle_out_1 = angle(angle_out_name[0] + angle_out_name[1] + ray_name)
         angle_out_2 = angle(ray_name + angle_out_name[1] + angle_out_name[2])
 
-        eq(angle_out_1, angle_out_2)
+        eq(angle_out_1, self.angles_out[from_v]/2)
+        eq(angle_out_2, self.angles_out[from_v]/2)
 
         # => 2 góc so le trong
-        add_relation(Relation("SO_LE_TRONG", ))
+        v1, v2 = self.get_other_vertices(from_v)
+        angle_out_2_obj = get_angle_obj(str(angle_out_2))
+        tri_angle_v1 = get_angle_obj(str(self.angles[v1]))
+        add_relation(Relation("SO_LE_TRONG", angle_out_2_obj, tri_angle_v1))
 
         # Phát sinh sự kiện: kẻ đường cao trong tam giác, cắt cạnh đối diện tại 1 điểm
     def set_height(self, from_v, to_v):
@@ -142,8 +140,8 @@ class Triangle:
         # generate 2 new triangle
         v1, v2 = self.get_other_vertices(from_v)
 
-        tri1 = Triangle(v1+from_v+to_v)
-        tri2 = Triangle(v2+from_v+to_v)
+        tri1 = Triangle(v1 + from_v + to_v)
+        tri2 = Triangle(to_v + from_v + v2)
 
         eq(tri1.angles[v1], self.angles[v1])
         eq(tri2.angles[v2], self.angles[v2])
@@ -151,7 +149,7 @@ class Triangle:
         tri1.set_angle(to_v, 90)
         tri2.set_angle(to_v, 90)
 
-        eq(tri1.angles[from_v] + tri2.angles[from_v], 180)
+        eq(tri1.angles[from_v] + tri2.angles[from_v], self.angles[from_v])
 
         return tri1, tri2
 
@@ -196,17 +194,3 @@ class Triangle:
             results.extend([tri1_1, tri1_2, tri2_1, tri2_2, tri3])
 
         return results
-
-
-    
-
-
-# v1, v2, v3 = symbols('v1,v2,v3', positive=True)
-# rule_01 = Rule(
-#     [
-#         Triangle(v1, v2, v3)
-#     ],
-#     [
-#         Equation(v1 + v2 + v3, 180)
-#     ], id="luat 1"
-# )

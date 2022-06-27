@@ -46,6 +46,12 @@ from sympy import Eq, solve, symbols, solveset, simplify, S, solve_rational_ineq
 # print(x)
 # quit()
 
+AMK, KAM, MKA = symbols('AMK KAM MKA', positive=True)
+eqs = Eq(AMK + KAM + MKA, 180)
+kq = solve(eqs, [MKA])
+print(kq)
+quit()
+
 
 BAC, ABC, ACB, BAK, AKB, CBK, BCK, BKC, KAM, AKM, BAM, ABM, AMB, CBM, BCM, BMC, KCM, CKM, CMK, CAM, ACM, AMC = symbols('BAC, ABC, ACB, BAK, AKB, CBK, BCK, BKC, KAM, AKM, BAM, ABM, AMB, CBM, BCM, BMC, KCM, CKM, CMK, CAM, ACM, AMC', positive=True)
 ABK, AMK = symbols('AMK ABK', positive=True)

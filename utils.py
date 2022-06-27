@@ -13,4 +13,5 @@ def find_common_ele(self, list1, list2):
 
 
 def flat_list(list):
-    return [ele for sublist in list for ele in sublist]
+    results = [ele for sublist in list for ele in sublist]
+    return remove_duplicates(results)
