@@ -2,8 +2,8 @@ from angle import Angle
 from equation import Equation
 from event import Event
 from goal import Goal
-from relation import Relation
-from rule import Rule
+from crel import Crel
+from ruleobj import Rule
 
 from triangle import Triangle
 from sympy import simplify, solve, solveset, symbols, pprint
@@ -12,8 +12,8 @@ from utils import remove_duplicates, sort_name
 
 from queue import Queue
 
-from solver import apply_rules, get_simple_equations, get_rel_symbols, get_rel_symbols, get_trace_paths, get_known, print_solution, relation_exist, solve_equation, solve_path, solve_rel_symbol, trace_symbols
-from solver import g_equations, g_symbols, g_graph
+from cokb import apply_rules, get_simple_equations, get_rel_symbols, get_rel_symbols, get_trace_paths, get_known, print_solution, relation_exist, solve_equation, solve_path, solve_rel_symbol, trace_symbols
+from cokb import g_equations, g_symbols, g_graph
 
 
 # C : khái niệm ( điểm, tia, đoạn thẳng, góc, tam giác...)
@@ -139,7 +139,7 @@ class Cokb:
                         self.solve_compare(symbol_1, symbol_2)
 
                 if goal.goal_type == 3: # chứng minh 1 mối quan hệ
-                    if isinstance(goal_data, Relation):
+                    if isinstance(goal_data, Crel):
 
                         self.solve_relation(goal_data)
 
@@ -254,7 +254,7 @@ class Cokb:
         return False
 
 
-    def solve_relation(self, relation: Relation) -> bool:
+    def solve_relation(self, relation: Crel) -> bool:
 
         # duyet
         step = 1

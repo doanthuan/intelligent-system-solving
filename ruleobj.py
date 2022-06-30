@@ -1,6 +1,6 @@
 from sympy import Eq
 from equation import Equation
-from relation import Relation
+from crel import Crel
 
 
 class IfStm:
@@ -22,8 +22,8 @@ class Rule:
         obj1 = self.args[0]
         obj2 = self.args[1]
         for stm in self.if_stm.cond_list:
-            if isinstance(stm, Relation):
-                rel = Relation(stm.name, obj1, obj2)
+            if isinstance(stm, Crel):
+                rel = Crel(stm.name, obj1, obj2)
                 print(rel)
                 
             if isinstance(stm, Eq):

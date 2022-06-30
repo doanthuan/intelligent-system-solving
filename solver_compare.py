@@ -9,8 +9,8 @@ import sympy
 from angle import Angle
 from equation import Equation
 from line import Line
-from relation import Relation
-from rule import IfStm, Rule
+from crel import Crel
+from ruleobj import IfStm, Rule
 from utils import flat_list, remove_duplicates
 
 # Tập C

@@ -1,17 +1,16 @@
-from cokb import Cokb
+from program import Program
 from sympy import Eq, simplify
 from equation import Equation
 from line import Line
 
-from relation import Relation
-from solver import angle
+from crel import Crel
 
 if __name__ == "__main__":
 
     '''
     Bài 1
     '''
-    solver = Cokb()
+    solver = Program()
     # Cho tam giác ABC
     #solve.add_event("TRIANGLE", "ABC")
     solver.set_triangle("ABC")
@@ -106,25 +105,25 @@ if __name__ == "__main__":
 
     # solver.solve_goals()
 
-    '''
-    Bài 11 - Trang 138 Bài Tập Hình Học lớp 7
-    '''
-    solver = Cokb()
-    solver.set_triangle("ABC")
+    # '''
+    # Bài 11 - Trang 138 Bài Tập Hình Học lớp 7
+    # '''
+    # solver = Program()
+    # solver.set_triangle("ABC")
 
-    solver.set_angle('ABC', 70)
+    # solver.set_angle('ABC', 70)
 
-    solver.set_angle('BCA', 30)
+    # solver.set_angle('BCA', 30)
 
-    solver.set_bisector_in('ABC', 'A', 'D')
+    # solver.set_bisector_in('ABC', 'A', 'D')
 
-    solver.set_height('ABC', 'A', 'H')
+    # solver.set_height('ABC', 'A', 'H')
 
-    solver.add_goal(1 , ("ANGLE", "CAB"))
-    solver.add_goal(1 , ("ANGLE", "HDA"))
-    solver.add_goal(1 , ("ANGLE", "HAD"))
+    # solver.add_goal(1 , ("ANGLE", "CAB"))
+    # solver.add_goal(1 , ("ANGLE", "HDA"))
+    # solver.add_goal(1 , ("ANGLE", "HAD"))
 
-    solver.solve_goals() 
+    # solver.solve_goals() 
 
 
 

@@ -1,212 +1,194 @@
-from angle import Angle
-from equation import Equation
-from event import Event
-from goal import Goal
-from relation import Relation
-from rule import Rule
-
-from triangle import Triangle
-from sympy import simplify, solve, solveset, symbols, pprint
-
-from utils import remove_duplicates, sort_name
-
+from inspect import _void
+from platform import release
 from queue import Queue
+from typing import List, Union
+from sympy import  Eq, Symbol, solve, symbols
+from copy import copy, deepcopy
 
-from solver import apply_rules, bfs, get_all_symbols, get_trace_paths, get_unknown, load_graph, print_logs, print_trace_rels, relation_exist, set_equation, solve_path, trace_symbols
-from solver import g_equations, g_symbols, g_graph
-
-
-# C : khái niệm ( điểm, tia, đoạn thẳng, góc, tam giác...)
-
-# H : quan hệ phân cấp ( góc nhọn, góc tù, tam giác cân, ...)
-
-# R : quan hệ giữa các khái niệm ( song song, vuông góc, thẳng hàng...)
-
-# Funcs: các hàm ( hàm tính khoảng cách, trung điểm, tính đối xứng...)
-
-# Rules: các luật ( tính chất, mệnh đề, định lý)
+from ceq import Ceq
+from cobj import Cobj
+from utils import flat_list, remove_duplicates
 
 class Cokb:
-
-    def __init__(self):
-        # Tập C
-        self.triangles = {}
-        
-        # Tập KL
-        self.goals = []
-
-    def get_angle(self, angel_name):
-        triangle = self.triangles[Triangle.triangle_name(angel_name)]
-        if triangle is None:
-            raise Exception("Could not find triangle which have that angle")
-
-        return triangle.angles[angel_name[1]]
-
-    def add_triangle(self, triangle):
-        if isinstance(triangle, str):
-            tri = Triangle(triangle)
-            self.triangles[tri.name] = tri
-
-        if isinstance(triangle, Triangle):
-            self.triangles[triangle.name] = triangle
-            
-        if isinstance(triangle, list):
-            for a_tri in triangle:
-                self.triangles[a_tri.name] = a_tri
     
-    # Event functions
-    def set_triangle(self, name):
-        if len(name) != 3:
-            raise Exception("Set TRIANGLE error. Triangle's name must be 3 characters")
+    hypo = {}
+    knowns = {}
 
-        self.add_triangle(name)
+    trace_paths = {}
+    trace_rels = []
 
-    def set_angle(self, symbol_name, symbol_value):
-        triangle = self.triangles[Triangle.triangle_name(symbol_name)]
-        if triangle is None:
-            raise Exception("Set angle error. Could not find triangle")
+    @staticmethod
+    def init_hypo():
+        if len(Cokb.hypo) == 0:
+            for key, value in Cobj.symbs.items():
+                if not isinstance(value, Symbol) :
+                    Cokb.hypo[key] = value
+                    Cokb.knowns[key] = value
+        return Cokb.knowns
+    @staticmethod
+    def get_unknown():
+        unknows = {}
+        for key, a_symbol in Cobj.symbs.items():
+            if key not in Cokb.knowns.keys():
+                unknows[key] = a_symbol
+        return unknows
 
-        triangle.set_angle(symbol_name[1], symbol_value)
+    @staticmethod
+    def count_known(eq: Eq) -> int:
+        count = 0
+        for a_symbol in eq.free_symbols:
+            if str(a_symbol) in Cokb.knowns.keys():
+                count += 1
+        return count
 
-    def set_bisector_in(self, triangle, from_v, to_v):
-        triangle = self.triangles[Triangle.triangle_name(triangle)]
-        if triangle is None:
-            raise Exception("Set BISECTOR error. Could not find triangle")
+    @staticmethod
+    def count_unknown(eq: Eq) -> int:
+        count = 0
+        for a_symbol in eq.free_symbols:
+            if str(a_symbol) not in Cokb.knowns.keys():
+                count += 1
+        return count
 
-        triangle1, triangle2 = triangle.set_bisector_in(from_v, to_v)
-        self.add_triangle([triangle1, triangle2])
+    @staticmethod
+    def subs_eqs_with_hypo():
+        equations = []
+        for a_eq in Ceq.eqs:
+            new_eq = a_eq
+            for a_symbol in a_eq.free_symbols:
+                if str(a_symbol) in Cokb.knowns.keys():
+                    new_eq = new_eq.subs(a_symbol, Cokb.knowns[str(a_symbol)])
+                
+            equations.append(new_eq)
 
-    def set_bisector_out(self, triangle, from_v, ray_name):
-        triangle = self.triangles[Triangle.triangle_name(triangle)]
-        if triangle is None:
-            raise Exception("Set BISECTOR error. Could not find triangle")
+        eqs = [eq for eq in equations if eq is not True]
+        return eqs
 
-        triangle.set_bisector_out(from_v, ray_name)
+    @staticmethod
+    def get_simple_equations() -> List[Eq]:
+        simple_eqs = []
+        for a_eq in Ceq.eqs:
+            if Cokb.count_known(a_eq) == len(a_eq.free_symbols) - 1:
+                simple_eqs.append(a_eq)
 
-    def set_height(self, triangle, from_v, to_v):
-        triangle = self.triangles[Triangle.triangle_name(triangle)]
-        if triangle is None:
-            raise Exception("Set HEIGHT error. Could not find triangle")
+        return simple_eqs
 
-        triangle1, triangle2 = triangle.set_height(from_v, to_v)
-        self.add_triangle([triangle1, triangle2])
+    @staticmethod
+    def solve_unknown():
+        unknowns = Cokb.get_unknown()
+        eqs = Cokb.subs_eqs_with_hypo()
+        if len(eqs) < len(unknowns):
+            return False # num var > num eq -> can not solve
 
-    def set_ray(self, triangle, from_v, to_v, m_v):
-        triangle = self.triangles[Triangle.triangle_name(triangle)]
-        if triangle is None:
-            raise Exception("Set BISECTOR error. Could not find triangle")
+        result = solve(eqs, list(unknowns.values()))
+        if len(result) > 0:
+            for sol_symbol, value in result.items():
+                Cokb.knowns[str(sol_symbol)] = value
+                Cokb.trace_paths[str(sol_symbol)] = eqs
+            return True
+        else:
+            return False
 
-        # vẽ tia từ góc cắt cạnh đối diện tại 1 điểm, nếu đi qua 1 điểm thì vẽ thêm 2 tia phân giác với 2 góc còn lại
-        triangles = triangle.set_ray(from_v, to_v, m_v)
-        self.add_triangle(triangles)
+    @staticmethod
+    def solve_equation(a_eq):
+        sol_symbol = None
+        #new_eq = deepcopy(a_eq)
+        new_eq = copy(a_eq)
+        for a_symbol in a_eq.free_symbols:
+            if str(a_symbol) in Cokb.knowns.keys():
+                new_eq = new_eq.subs(a_symbol, Cokb.knowns[str(a_symbol)]) 
+            else:
+                sol_symbol = a_symbol
+            # if str(a_symbol) not in Cokb.knowns.keys():
+            #     sol_symbol = a_symbol
 
-    def set_equation(self, equation: Equation):
-        set_equation(equation.eq)
+        if sol_symbol is None:
+            return None, None
 
-    def add_goal(self, goal_type, goal_data):
-        goal = Goal(goal_type, goal_data)
-        self.goals.append(goal)
+        sol_value = solve(new_eq, sol_symbol)
+        if len(sol_value) == 0:
+            return None, None
 
-    # Kiểm tra kết luận đã có trong tập sự kiện đã biết hay chưa
-    def solve_goals(self):
+        # symbols[str(sol_symbol)] = sol_value[0]
+        Cokb.knowns[str(sol_symbol)] = sol_value[0]
 
-        for goal in self.goals:
-            if goal.status is not True: # Chỉ xét những mục tiêu chưa tìm được
-                goal_data = goal.goal_data
-                if goal.goal_type == 1: # xác định 1 đối tượng
-                    if goal_data[0] == "ANGLE":
-                        if len(goal_data) != 2:
-                            raise Exception("Goal DETERMINE ANGLE error. Goal data must have 2 arguments")
+        #trace symbol
+        Cokb.trace_paths[str(sol_symbol)] = a_eq
 
-                        target_symbol = self.get_angle(goal_data[1])
+        return sol_symbol, sol_value[0]
 
-                        bfs(target_symbol)
-                            
-                if goal.goal_type == 2: # so sánh
-                    if goal_data[0] == "ANGLE": # so sánh góc
-                        if len(goal_data) != 3:
-                            raise Exception("Goal COMPARE-ANGLE error. Goal data must have 3 arguments")
+    @staticmethod
+    def is_in_hypo(a_symbol) -> bool:
+        return str(a_symbol) in Cokb.hypo.keys()
 
-                        symbol_1 = self.get_angle(goal_data[1])
-                        symbol_2 = self.get_angle(goal_data[2])
+    @staticmethod
+    def equation_true(equation: Eq) -> bool:
+        for a_symbol in equation.free_symbols:
+            if str(a_symbol) not in Cokb.knowns.keys():
+                return False
+        return True
 
-                        success, logs = self.solve_compare(symbol_1, symbol_2)
-                        print_logs(logs)
+    @staticmethod
+    def print_trace_paths(cur_symb):
 
-                if goal.goal_type == 3: # chứng minh 1 mối quan hệ
-                    if isinstance(goal_data, Relation):
-                        self.solve_relation(goal_data)
+        if cur_symb not in Cokb.trace_paths.keys():
+            return
 
-                if goal.goal_type == 4: # tìm góc bằng góc
-                    if goal_data[0] != "ANGLE" or len(goal_data) != 2:
-                        raise Exception("Goal FIND-ANGLE-COMPARE error. Goal data must have 2 arguments")
+        eq = Cokb.trace_paths[cur_symb]
+        if isinstance(eq, Eq):
+            for a_symbol in eq.free_symbols:
+                    if str(a_symbol) != cur_symb and str(a_symbol) not in Cokb.hypo.keys():
+                        Cokb.print_trace_paths(str(a_symbol))
+            print(f"{eq} => {cur_symb} =  {Cokb.knowns[str(cur_symb)]}")
 
-                    target_symbol = self.get_angle(goal_data[1])
-                    self.solve_find_compare(target_symbol)
+        elif isinstance(eq, list):
+            print("From multiple equations:")
+            for a_eq in eq:
+                print(f"{a_eq}")
+            print(f" => {cur_symb} =  {Cokb.knowns[str(cur_symb)]}")
 
-
-    def solve_compare(self, symbol_1, symbol_2):
-
-        load_graph()
-
-        traced_symbols = trace_symbols(symbol_1, symbol_2)
-        paths = get_trace_paths(traced_symbols, symbol_2)
-
-        # solve for each path
-        for path in paths:
-            results, logs = solve_path(path)
-
-            logs.append(("\nPath:", path))
-
-            x = simplify(symbol_1 - results[str(symbol_2)])
-            
-            result_str = f"{symbol_1}-{symbol_2} = {x} ==> "
-            if x == 0:
-                result_str += f"{symbol_1} = {symbol_2}"
-                logs.append(result_str)
-                return 0, logs
-            elif x.is_positive:
-                result_str += f"{symbol_1} < {symbol_2}"
-                logs.append(result_str)
-                return 1, logs
-            elif x.is_negative:
-                result_str += f"{symbol_1} > {symbol_2}"
-                logs.append(result_str)
-                return -1, logs
+    @staticmethod
+    def print_solution(target):
+        print("\n---TARGET---")
+        print(f"{str(target)}:{Cokb.knowns[str(target)]}")
+        print("---HYPO:---")
         
-        return False, ["Can not compare!"]
+        for key, value in Cokb.hypo.items():
+            print(f"{key}:{value}")
+        print("---SOLUTION---")
+        Cokb.print_trace_paths(str(target))
 
+    @staticmethod
+    def print_logs(logs):
+        while len(logs) > 0:
+            texts = logs.pop(0)
+            print(texts)
+        
+    @staticmethod
+    def bfs(target = None):
 
-    def solve_relation(self, relation: Relation) -> bool:
-
-        bfs()
+        # khởi tạo tập known từ giả thuyết
+        Cokb.init_hypo()
 
         # duyet
         step = 1
         while step < 100:
 
-            apply_rules()
-
             # check if all targets are found
-            if relation_exist(relation):
-                print("FOUND")
-                # print trace rules
-                print_trace_rels(relation)
+            if target is not None and str(target) in Cokb.knowns.keys():
+                Cokb.print_solution(target)
                 return True
+            
+            # tìm những equation giải được ngay
+            rel_eqs = Cokb.get_simple_equations()
+            if len(rel_eqs) == 0 and target is not None:
+                # not found -> try to solve unknown with all related equations
+                if not Cokb.solve_unknown():
+                    return False
+            else:    
+                for a_eq in rel_eqs:
+                    Cokb.solve_equation(a_eq)
 
             step += 1  
 
-        return False
-
-
-    def solve_find_compare(self, target_symbol):
-        unknown_symbols = get_unknown()
-        for a_symbol in unknown_symbols.values():
-            if str(a_symbol) != str(target_symbol):
-                result, logs = self.solve_compare(a_symbol, target_symbol)
-                if type(result) == int and result == 0:
-                    print("FOUND")
-                    print_logs(logs)
-                    break
-
-
+    
+    
