@@ -1,5 +1,6 @@
 
 from angle import Angle
+from ceq import Ceq
 from cobj import Cobj
 from cokb import Cokb
 from crule import Crule
@@ -8,6 +9,8 @@ from goal import Goal
 from crel import Crel
 
 from sympy import simplify
+from line import Line
+from solver_compare import SolverCompare
 
 from triangle import Triangle
 
@@ -28,31 +31,9 @@ class Program:
         
         # Tập KL
         self.goals = []
-
-    # def get_angle(self, angel_name):
-    #     triangle = Cobj.get_triangle(angel_name)
-    #     if triangle is None:
-    #         raise Exception("Could not find triangle which have that angle")
-
-    #     return triangle.angles[angel_name[1]]
-
-    # def add_triangle(self, triangle):
-    #     if isinstance(triangle, str):
-    #         tri = Triangle(triangle)
-    #         self.triangles[tri.name] = tri
-
-    #     if isinstance(triangle, Triangle):
-    #         self.triangles[triangle.name] = triangle
-            
-    #     if isinstance(triangle, list):
-    #         for a_tri in triangle:
-    #             self.triangles[a_tri.name] = a_tri
     
     # Event functions
     def set_triangle(self, name):
-        if len(name) != 3:
-            raise Exception("Set TRIANGLE error. Triangle's name must be 3 characters")
-        
         Triangle(name)
 
     def set_angle(self, symbol_name, symbol_value):
@@ -80,17 +61,16 @@ class Program:
         triangle1, triangle2 = triangle.set_height(from_v, to_v)
         self.add_triangle([triangle1, triangle2])
 
-    def set_ray(self, triangle, from_v, to_v, m_v):
-        triangle = self.triangles[Triangle.tri_name(triangle)]
+    def set_ray(self, tri_name, from_v, to_v, m_v):
+        triangle = Cobj.get_triangle(tri_name)
         if triangle is None:
             raise Exception("Set BISECTOR error. Could not find triangle")
 
         # vẽ tia từ góc cắt cạnh đối diện tại 1 điểm, nếu đi qua 1 điểm thì vẽ thêm 2 tia phân giác với 2 góc còn lại
-        triangles = triangle.set_ray(from_v, to_v, m_v)
-        self.add_triangle(triangles)
+        triangle.set_ray(from_v, to_v, m_v)
 
     def set_equation(self, equation: Equation):
-        Cobj.set_eq(equation.eq)
+        Ceq.set_eq(equation.eq)
 
     def add_goal(self, goal_type, goal_data):
         goal = Goal(goal_type, goal_data)
@@ -118,11 +98,13 @@ class Program:
                         if len(goal_data) != 3:
                             raise Exception("Goal COMPARE-ANGLE error. Goal data must have 3 arguments")
 
-                        symbol_1 = self.get_angle(goal_data[1])
-                        symbol_2 = self.get_angle(goal_data[2])
+                        angle_1 = Cobj.get_angle(goal_data[1])
+                        angle_2 = Cobj.get_angle(goal_data[2])
 
-                        success, logs = self.solve_compare(symbol_1, symbol_2)
-                        print_logs(logs)
+                        solver = SolverCompare()
+
+                        success, logs = solver.solve_compare(angle_1.symb, angle_2.symb)
+                        Cokb.print_logs(logs)
 
                 if goal.goal_type == 3: # chứng minh 1 mối quan hệ
                     if isinstance(goal_data, Crel):
@@ -134,38 +116,6 @@ class Program:
 
                     target_symbol = self.get_angle(goal_data[1])
                     self.solve_find_compare(target_symbol)
-
-
-    def solve_compare(self, symbol_1, symbol_2):
-
-        load_graph()
-
-        traced_symbols = trace_symbols(symbol_1, symbol_2)
-        paths = get_trace_paths(traced_symbols, symbol_2)
-
-        # solve for each path
-        for path in paths:
-            results, logs = solve_path(path)
-
-            logs.append(("\nPath:", path))
-
-            x = simplify(symbol_1 - results[str(symbol_2)])
-            
-            result_str = f"{symbol_1}-{symbol_2} = {x} ==> "
-            if x == 0:
-                result_str += f"{symbol_1} = {symbol_2}"
-                logs.append(result_str)
-                return 0, logs
-            elif x.is_positive:
-                result_str += f"{symbol_1} < {symbol_2}"
-                logs.append(result_str)
-                return 1, logs
-            elif x.is_negative:
-                result_str += f"{symbol_1} > {symbol_2}"
-                logs.append(result_str)
-                return -1, logs
-        
-        return False, ["Can not compare!"]
 
 
     def solve_relation(self, relation: Crel) -> bool:

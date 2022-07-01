@@ -3,6 +3,7 @@ from cobj import Cobj
 
 
 class Point:
+
     def __new__(cls, name):
         if name not in Cobj.points.keys():
             obj = object.__new__(cls)

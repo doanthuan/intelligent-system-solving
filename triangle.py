@@ -1,4 +1,5 @@
 from typing import Tuple, Type, NewType
+from unittest.loader import VALID_MODULE_NAME
 
 from sympy import symbols, Eq, Rational
 from angle import Angle
@@ -7,6 +8,7 @@ from cobj import Cobj
 from equation import Equation
 from line import Line
 from crel import Crel
+from point import Point
 from ruleobj import Rule
 from utils import sort_name
 from vertex import Vertex
@@ -41,12 +43,20 @@ class Triangle:
     def __new__(cls, name):
         #self = Symbol.__new__(self, name,  positive=True)
         #obj = Symbol.__new__(cls, name, positive=True)
+        if len(name) != 3:
+            raise Exception("Create Triangle Error. Triangle name must be 3 characters")
 
         name = Triangle.tri_name(name)
         if name not in Cobj.triangles.keys():
             obj = object.__new__(cls)
             # tri name
             obj.name = name
+
+            # 3 points
+            obj.points = {}
+            obj.points[name[0]] = Point(name[0])
+            obj.points[name[1]] = Point(name[1])
+            obj.points[name[2]] = Point(name[2])
 
             # 3 edges
             obj.edges = {}
@@ -67,24 +77,38 @@ class Triangle:
         return Cobj.triangles[name]
     
     @staticmethod
-    def from_lines(a: Line, b: Line, c: Line):
-        A,B,C = Line.get_connect_points(a,b,c)
-        return Triangle(A+B+C)
+    def from_lines(a: Line, b: Line):
+        if not a.is_connect(b):
+            return False
+        A, B, C = a.get_points(b)
+        return Triangle(A + B + C)
+
+    @staticmethod
+    def is_triangle(a: Line, b: Line):
+        # c_points = Line.get_connect_points(a,b,c)
+        # if len(c_points) != 3:
+        #     return False
+
+        # if c_points[0] != c_points[1] and c_points[1] != c_points[2] and c_points[0] != c_points[2]:
+        #     return True
+
+        # return False
+        return a.is_connect(b)
 
     @staticmethod
     def tri_name(name):
-        # min_value = min(name)
-        # min_index = name.index(min_value)
-        # result = name[min_index] + name[(min_index+1)%3] + name[(min_index+2)%3]
-        # return result
-        return sort_name(name)
+        min_value = min(name)
+        min_index = name.index(min_value)
+        result = name[min_index] + name[(min_index+1)%3] + name[(min_index+2)%3]
+        return result
+        #return sort_name(name)
 
-    def angle_name(self, vertex):
-        vertex1, vertex2 = self.get_other_vertices(vertex)
+    def angle_name(self, v):
+        v1, v2 = self.get_other_points(v)
         #vertexs = sort_name(vertex1 + vertex2)
-        return vertex1 + vertex + vertex2
+        return v1 + v + v2
 
-    def get_other_vertices(self, vertex_name):
+    def get_other_points(self, vertex_name):
         if len(vertex_name) == 1:
             i_vertex = self.name.index(vertex_name)
             i_left = i_vertex - 1
@@ -113,7 +137,7 @@ class Triangle:
     def set_angle_out(self, from_v, ray_name = None):
         if ray_name is None:
             ray_name = "x"
-        v1, v2 = self.get_other_vertices(from_v)
+        v1, v2 = self.get_other_points(from_v)
         
         self.angles_out[from_v] = angle(ray_name + from_v + v1)
         
@@ -123,30 +147,68 @@ class Triangle:
     # Phát sinh sự kiện: tia phân giác từ 1 góc trong tam giác, cắt cạnh đối diện tại 1 điểm thì chia đôi góc và tạo thành 2 tam giác khác
     def set_bisector_in(self, from_v, to_v):
 
-        v1, v2 = self.get_other_vertices(from_v)
+        v1, v2 = self.get_other_points(from_v)
 
         # tia phân giác cắt đoạn v1-v2 tại điểm to_v
         Line(from_v + to_v)
         Ceq(Angle(v1 + from_v + to_v).symb, Angle(v1 + from_v + v2).symb/2)
         Ceq(Angle(to_v + from_v + v2).symb, Angle(v1 + from_v + v2).symb/2)
-        # Ceq(tri1.angles[from_v], self.angles[from_v]/2)
-        # Ceq(tri2.angles[from_v], self.angles[from_v]/2)
         
         # điểm to_v thuộc đoạn thẳng v1 v2 -> tạo thành 2 đoạn mới
-        Line(v1+v2).add_point(to_v)
+        Line(v2 + v1).add_point(to_v)
 
-        Line(v1 + to_v)
-        Line(v2 + to_v)
 
-        # tri1 = Triangle(v1 + from_v + to_v)
-        # tri2 = Triangle(to_v + from_v + v2)
+    # Phát sinh sự kiện: tia từ 1 góc cắt cạnh đối diện tại 1 điểm
+    def set_ray(self, from_v, to_v, m_v = None):
+        results = []
+        '''
+        vertex1: A
+        vertex2: C
+        from_vertex: B
+        to_vertex: K
+        middle_vertex: M
+        '''
+        v1, v2 = self.get_other_points(from_v)
 
-        # Ceq(tri1.angles[to_v] + tri2.angles[to_v], 180)
+        # generate 2 new triangle
+        # Triangle(v1 + from_v + to_v)
+        # Triangle(to_v + from_v + v2)
+
+        # tia phân giác đi qua điểm m_v
+        Line(from_v + to_v).add_point(m_v)
+
+        # điểm to_v nằm trên đoạn thẳng v1 v2
+        Line(v2 + v1).add_point(to_v)
+        
+        Line(m_v + v1)
+        Line(v2 + m_v)
+
+        
 
         # Ceq(tri1.angles[v1], self.angles[v1])
         # Ceq(tri2.angles[v2], self.angles[v2])
 
-        # return tri1, tri2
+        #Ceq(tri1.angles[to_v] + tri2.angles[to_v], 180)
+
+        #Ceq(tri1.angles[from_v] + tri2.angles[from_v], self.angles[from_v])
+
+        #results.extend([tri1, tri2])
+
+        # if m_v is not None:
+        #     tri1_1, tri1_2 = tri1.set_ray(v1, m_v)
+        #     tri2_1, tri2_2 = tri2.set_ray(v2, m_v)
+
+        #     # one more triangle created 
+        #     tri3 = Triangle(v1 + m_v +  v2)
+
+        #     Ceq(tri3.angles[v1], tri1_1.angles[v1])
+        #     Ceq(tri3.angles[v2], tri2_2.angles[v2])
+            
+        #     Ceq(tri3.angles[m_v], tri1_1.angles[m_v] + tri2_2.angles[m_v])
+
+        #     results.extend([tri1_1, tri1_2, tri2_1, tri2_2, tri3])
+
+        # return results
 
     def set_bisector_out(self, from_v, ray_name):
         # if don't have angle out yet, set it
@@ -162,7 +224,7 @@ class Triangle:
         Ceq(angle_out_2, self.angles_out[from_v]/2)
 
         # => 2 góc so le trong
-        v1, v2 = self.get_other_vertices(from_v)
+        v1, v2 = self.get_other_points(from_v)
         angle_out_2_obj = get_angle_obj(str(angle_out_2))
         tri_angle_v1 = get_angle_obj(str(self.angles[v1]))
         add_relation(Crel("SO_LE_TRONG", angle_out_2_obj, tri_angle_v1))
@@ -171,7 +233,7 @@ class Triangle:
     def set_height(self, from_v, to_v):
 
         # generate 2 new triangle
-        v1, v2 = self.get_other_vertices(from_v)
+        v1, v2 = self.get_other_points(from_v)
 
         tri1 = Triangle(v1 + from_v + to_v)
         tri2 = Triangle(to_v + from_v + v2)
@@ -187,43 +249,4 @@ class Triangle:
         return tri1, tri2
 
     
-    # Phát sinh sự kiện: tia từ 1 góc cắt cạnh đối diện tại 1 điểm
-    def set_ray(self, from_v, to_v, m_v = None):
-        results = []
-        '''
-        vertex1: A
-        vertex2: C
-        from_vertex: B
-        to_vertex: K
-        middle_vertex: M
-        '''
-        v1, v2 = self.get_other_vertices(from_v) 
-
-        # generate 2 new triangle
-        tri1 = Triangle(v1 + from_v + to_v)
-        tri2 = Triangle(to_v + from_v + v2)
-
-        Ceq(tri1.angles[v1], self.angles[v1])
-        Ceq(tri2.angles[v2], self.angles[v2])
-
-        Ceq(tri1.angles[to_v] + tri2.angles[to_v], 180)
-
-        Ceq(tri1.angles[from_v] + tri2.angles[from_v], self.angles[from_v])
-
-        results.extend([tri1, tri2])
-
-        if m_v is not None:
-            tri1_1, tri1_2 = tri1.set_ray(v1, m_v)
-            tri2_1, tri2_2 = tri2.set_ray(v2, m_v)
-
-            # one more triangle created 
-            tri3 = Triangle(v1 + m_v +  v2)
-
-            Ceq(tri3.angles[v1], tri1_1.angles[v1])
-            Ceq(tri3.angles[v2], tri2_2.angles[v2])
-            
-            Ceq(tri3.angles[m_v], tri1_1.angles[m_v] + tri2_2.angles[m_v])
-
-            results.extend([tri1_1, tri1_2, tri2_1, tri2_2, tri3])
-
-        return results
+    

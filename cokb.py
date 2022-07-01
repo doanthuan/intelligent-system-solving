@@ -1,5 +1,4 @@
 from inspect import _void
-from platform import release
 from queue import Queue
 from typing import List, Union
 from sympy import  Eq, Symbol, solve, symbols
@@ -25,6 +24,7 @@ class Cokb:
                     Cokb.hypo[key] = value
                     Cokb.knowns[key] = value
         return Cokb.knowns
+    
     @staticmethod
     def get_unknown():
         unknows = {}
@@ -108,7 +108,6 @@ class Cokb:
         if len(sol_value) == 0:
             return None, None
 
-        # symbols[str(sol_symbol)] = sol_value[0]
         Cokb.knowns[str(sol_symbol)] = sol_value[0]
 
         #trace symbol

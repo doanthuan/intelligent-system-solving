@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 # from angle import Angle
 # from line import Line
 # from point import Point
 # from triangle import Triangle
 
-from sympy import symbols
+from sympy import  symbols
 
 from ceq import Ceq
 
@@ -66,3 +68,4 @@ class Cobj:
     def angle_exist(name: str):
         angle_name = Cobj.get_angle_name(name)
         return angle_name in Cobj.angles.keys()
+

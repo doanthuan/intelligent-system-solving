@@ -14,15 +14,26 @@ RULES
 '''
 
 # Rule nội tại
-# tạo tam giác từ 3 cạnh
-def rule_01(a: Line, b: Line, c: Line):
-    if Line.is_triangle(a, b, c):
-        Triangle.from_lines(a, b, c)
+# tạo tam giác từ 2 cạnh
+def rule_01(a: Line, b: Line):
+    if Triangle.is_triangle(a, b):
+        Triangle.from_lines(a, b)
 
 # xét 2 góc bằng nhau từ 2 cạnh
 def rule_02(A: Angle, B: Angle):
     if A.equal(B):
         Ceq(A.symb, B.symb)
+
+# xét 2 góc kề -> tổng = góc lớn
+def rule_03(A: Angle, B: Angle):
+    if A.is_adjacent(B):
+        adj_angle = A.get_adjacent_angle(B)
+        Ceq(A.symb + B.symb, adj_angle.symb)
+
+# xét 2 góc kề bù -> tổng = 180
+def rule_04(A: Angle, B: Angle):
+    if A.is_complementary(B):
+        Ceq(A.symb + B.symb, 180)
 
 def rule_10(A: Angle, B: Angle) -> Crel:
     if Crel.relation_exist(Crel("SO_LE_TRONG", A, B)):
@@ -31,7 +42,7 @@ def rule_10(A: Angle, B: Angle) -> Crel:
 
 class Crule:
 
-    rules = [rule_01, rule_02]
+    rules = [rule_01, rule_02, rule_03, rule_04]
 
     @staticmethod
     def apply_rules():
