@@ -40,24 +40,34 @@ class Line:
                 return True
         return False
 
-    def __new__(cls, name, value = None):
+    def __new__(cls, name, value = None, is_ray = False):
         #name = sort_name(name)
         if value is not None or name not in Cobj.lines.keys():
             obj = object.__new__(cls)
             obj.name = name
             obj.v1 = Point(name[0])
-            obj.v2 = Point(name[1])
+            obj.v2 = Point(name[1]) if not is_ray else name[1]
+            obj.is_ray = is_ray
             obj.value = value
             obj.symb = symbols(name, positive=True)
-            obj.points = [obj.v1.name, obj.v2.name]
+            obj.points = [str(obj.v1), str(obj.v2)]
             Cobj.lines[name] = obj
         return Cobj.lines[name]
+
 
     def __str__(self):
         return f"{self.name}"
 
-    def identical(self, line: Line) -> bool:
-        if (self.v1.name == line.v1.name and self.v2.name == line.v2.name) or (self.v1.name == line.v2.name and self.v2.name == line.v1.name):
+    def ident(self, line: Line) -> bool:
+        if (self.v1.name == line.v1.name and str(self.v2) == str(line.v2)) or (self.v1.name == str(line.v2) and str(self.v2) == line.v1.name):
+            return True
+        return False
+
+    def is_reverse(self, line) -> bool:
+        if self.is_ray or line.is_ray:
+            return False
+
+        if (self.v1.name == line.v2.name and self.v2.name == line.v1.name) or (self.v1.name == line.v1.name and self.v2.name == line.v2.name):
             return True
         return False
 
@@ -75,7 +85,7 @@ class Line:
         c_points = self.get_common_points(line)
         return len(c_points) >= 2
 
-    def is_adjacent(self, line: Line) -> bool:
+    def is_in_line(self, line: Line) -> bool:
         # c_points = self.get_common_points(line)
         # if len(c_points) != 1:
         #     return False
@@ -83,6 +93,12 @@ class Line:
 
         # p1 = self.get_other_point(c_point)
         # p2 = line.get_other_point(c_point)
+        if self.is_ray or line.is_ray:
+            return False
+        
+        if self.is_reverse(line):
+            return False
+
         if self.v1.name == line.v2.name or self.v2.name == line.v1.name:
             p1, p2, p3 = self.get_points(line)
             return Line.is_points_in_line([p1, p2, p3])
@@ -105,12 +121,15 @@ class Line:
         self.points.append(str(point))
 
         Line(self.v1.name + point)
-        Line(point + self.v2.name)
+        Line(point + str(self.v2), is_ray=self.is_ray)
 
     def is_connect(self, line: Line) -> bool:
         # c_points = self.get_common_points(line)
         # return len(c_points) == 1
-        if self.is_adjacent(line) or self.is_belongs(line):
+        if self.is_ray or line.is_ray:
+            return False
+
+        if self.is_in_line(line) or self.is_belongs(line):
             return False
         if self.v1.name == line.v2.name or self.v2.name == line.v1.name:
             return True

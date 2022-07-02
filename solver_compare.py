@@ -1,23 +1,24 @@
 from sympy import Symbol, solve, simplify
 from ceq import Ceq
-from cobj import Cobj
 from utils import flat_list, remove_duplicates
 
 class SolverCompare:
     
-    def __init__(self):
+    def __init__(self, symbs, eqs):
+        self.symbs = symbs
+        self.eqs = eqs
         self.graph = self.load_graph()
 
     def load_graph(self):
         
         graph = {}
-        for symbol_row in Cobj.symbs.keys():
+        for symbol_row in self.symbs.keys():
             graph[symbol_row] = {}
-            for symbol_col in Cobj.symbs.keys():
+            for symbol_col in self.symbs.keys():
                 if symbol_col == symbol_row:
                     continue
                 #g_graph[symbol_row][symbol_col] = []
-                for a_eq in Ceq.eqs:
+                for a_eq in self.eqs:
                     free_symbols_str = [str(a_sym) for a_sym in a_eq.free_symbols]
                     if symbol_row in free_symbols_str and symbol_col in free_symbols_str:
                         if symbol_col not in graph[symbol_row]:
@@ -32,8 +33,8 @@ class SolverCompare:
     def get_rel_symbols(self, from_symbol, knowns = []):
         results = []
         for a_symbol in self.graph[str(from_symbol)].keys():
-            if isinstance(Cobj.symbs[str(a_symbol)], Symbol) and not self.check_in_knowns(a_symbol, self.graph[str(from_symbol)][a_symbol][0], knowns):
-                results.append(Cobj.symbs[str(a_symbol)])
+            if isinstance(self.symbs[str(a_symbol)], Symbol) and not self.check_in_knowns(a_symbol, self.graph[str(from_symbol)][a_symbol][0], knowns):
+                results.append(self.symbs[str(a_symbol)])
         return results
 
     def get_connect_equations(self, to_symbol, from_symbol):

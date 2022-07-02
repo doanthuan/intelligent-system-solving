@@ -1,15 +1,16 @@
+from angle import Angle
 from program import Program
 from sympy import Eq, simplify
 from equation import Equation
 from line import Line
 
-from crel import Crel
+from relation import Relation
 
 if __name__ == "__main__":
 
-    '''
-    Bài 1
-    '''
+    # '''
+    # Bài 1
+    # '''
     # program = Program()
     # # Cho tam giác ABC
     # #solve.add_event("TRIANGLE", "ABC")
@@ -32,25 +33,24 @@ if __name__ == "__main__":
 
     # program.solve_goals()
 
-    '''
-    Bài 2
-    '''
-    program2 = Program()
-    program2.set_triangle("ABC")
+    # '''
+    # Bài 2
+    # '''
+    # program2 = Program()
+    # program2.set_triangle("ABC")
 
-    # tia phân giác góc B, cắt cạnh đối diện tại D
-    #solve2.add_event("RAY", ('ABC', 'B', 'K', 'M'))
-    program2.set_ray('ABC', 'B', 'K', 'M')
+    # # tia phân giác góc B, cắt cạnh đối diện tại D
+    # program2.set_ray('ABC', 'B', 'K', 'M')
 
-    program2.add_goal(2 , ("ANGLE", "AMK", "ABK")) # So sánh
-    #solver2.add_goal(2 , ("ANGLE", "AMC", "ABC")) # So sánh
+    # program2.add_goal(2 , ("ANGLE", "AMK", "ABK")) # So sánh
+    # #solver2.add_goal(2 , ("ANGLE", "AMC", "ABC")) # So sánh
 
-    program2.solve_goals()
+    # program2.solve_goals()
 
     # '''
     # Bài 3
     # '''
-    # solver3 = Cokb()
+    # solver3 = Program()
     # solver3.set_triangle("ABC")
 
     # solver3.set_height('ABC', 'B', 'H')
@@ -63,7 +63,7 @@ if __name__ == "__main__":
     # '''
     # Bài 4
     # '''
-    # solver4 = Cokb()
+    # solver4 = Program()
     # solver4.set_triangle("ABC")
 
     # solver4.set_angle('ABC', 50)
@@ -78,12 +78,12 @@ if __name__ == "__main__":
     # '''
     # Bài 8 - Trang 138 Bài Tập Hình Học lớp 7
     # '''
-    # solver = Cokb()
+    # solver = Program()
     # solver.set_triangle("ABC")
 
     # solver.set_angle('CAB', 100)
 
-    # solver.set_equation(Equation(angle("ABC") - angle("BCA"), 20))
+    # solver.set_equation(Eq(Angle("ABC").symb - Angle("BCA").symb, 20))
     
     # solver.add_goal(1 , ("ANGLE", "ABC"))
     # solver.add_goal(1 , ("ANGLE", "BCA"))
@@ -94,7 +94,7 @@ if __name__ == "__main__":
     # '''
     # Bài 9 - Trang 138 Bài Tập Hình Học lớp 7
     # '''
-    # solver = Cokb()
+    # solver = Program()
     # solver.set_triangle("ABC")
 
     # solver.set_angle('CAB', 90)
@@ -105,25 +105,25 @@ if __name__ == "__main__":
 
     # solver.solve_goals()
 
-    # '''
-    # Bài 11 - Trang 138 Bài Tập Hình Học lớp 7
-    # '''
-    # solver = Program()
-    # solver.set_triangle("ABC")
+    '''
+    Bài 11 - Trang 138 Bài Tập Hình Học lớp 7
+    '''
+    solver = Program()
+    solver.set_triangle("ABC")
 
-    # solver.set_angle('ABC', 70)
+    solver.set_angle('ABC', 70)
 
-    # solver.set_angle('BCA', 30)
+    solver.set_angle('BCA', 30)
 
-    # solver.set_bisector_in('ABC', 'A', 'D')
+    solver.set_bisector_in('ABC', 'A', 'D')
 
-    # solver.set_height('ABC', 'A', 'H')
+    solver.set_height('ABC', 'A', 'H')
 
-    # solver.add_goal(1 , ("ANGLE", "CAB"))
-    # solver.add_goal(1 , ("ANGLE", "HDA"))
-    # solver.add_goal(1 , ("ANGLE", "HAD"))
+    solver.add_goal(1 , ("ANGLE", "CAB"))
+    solver.add_goal(1 , ("ANGLE", "HDA"))
+    solver.add_goal(1 , ("ANGLE", "HAD"))
 
-    # solver.solve_goals() 
+    solver.solve_goals() 
 
 
 

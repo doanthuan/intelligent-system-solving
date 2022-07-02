@@ -33,7 +33,7 @@ class Angle:
         return f"{self.name}"
 
 
-    def identical(self, angle) -> bool:
+    def ident(self, angle) -> bool:
         if self.name == angle.name:
             if self.value is not None and angle.value is not None:
                 return self.value == angle.value
@@ -62,6 +62,7 @@ class Angle:
             
         return results
 
+    # góc kề
     def is_adjacent(self, angle) -> bool:
         if self.name[1] != angle.name[1]:
             return False
@@ -88,13 +89,19 @@ class Angle:
         
         return Angle.from_lines(line1, line2)
 
+    # góc kề bù
     def is_complementary(self, angle) -> bool:
         if not self.is_adjacent(angle):
             return False
         
-        if self.line1.is_adjacent(angle.line1) or self.line1.is_adjacent(angle.line2) or self.line2.is_adjacent(angle.line1) or self.line2.is_adjacent(angle.line2):
+        if self.line1.is_in_line(angle.line1) or self.line1.is_in_line(angle.line2) or self.line2.is_in_line(angle.line1) or self.line2.is_in_line(angle.line2):
             return True
 
+        return False
+
+    def is_staggered(self, angle) -> bool:
+        if self.line1.is_reverse(angle.line1) or self.line2.is_reverse(angle.line2):
+            return True
         return False
 
 

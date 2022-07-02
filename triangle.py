@@ -7,9 +7,8 @@ from ceq import Ceq
 from cobj import Cobj
 from equation import Equation
 from line import Line
-from crel import Crel
+from relation import Relation
 from point import Point
-from ruleobj import Rule
 from utils import sort_name
 from vertex import Vertex
 
@@ -45,36 +44,38 @@ class Triangle:
         #obj = Symbol.__new__(cls, name, positive=True)
         if len(name) != 3:
             raise Exception("Create Triangle Error. Triangle name must be 3 characters")
+        
+        triangle = Cobj.get_triangle(name)
+        if triangle is not None:
+            return triangle
 
         name = Triangle.tri_name(name)
-        if name not in Cobj.triangles.keys():
-            obj = object.__new__(cls)
-            # tri name
-            obj.name = name
+        obj = object.__new__(cls)
+        # tri name
+        obj.name = name
 
-            # 3 points
-            obj.points = {}
-            obj.points[name[0]] = Point(name[0])
-            obj.points[name[1]] = Point(name[1])
-            obj.points[name[2]] = Point(name[2])
+        # 3 points
+        obj.points = {}
+        obj.points[name[0]] = Point(name[0])
+        obj.points[name[1]] = Point(name[1])
+        obj.points[name[2]] = Point(name[2])
 
-            # 3 edges
-            obj.edges = {}
-            obj.edges[name[0]+name[1]] = Line(name[0]+name[1])
-            obj.edges[name[1]+name[2]] = Line(name[1]+name[2])
-            obj.edges[name[2]+name[0]] = Line(name[2]+name[0])
+        # 3 edges
+        obj.edges = {}
+        obj.edges[name[0]+name[1]] = Line(name[0]+name[1])
+        obj.edges[name[1]+name[2]] = Line(name[1]+name[2])
+        obj.edges[name[2]+name[0]] = Line(name[2]+name[0])
 
-            # 3 angles
-            obj.angles = {}
-            obj.angles[name[0]] = Angle(obj.angle_name(name[0]))
-            obj.angles[name[1]] = Angle(obj.angle_name(name[1]))
-            obj.angles[name[2]] = Angle(obj.angle_name(name[2]))
-            obj.angles_out = {}
+        # 3 angles
+        obj.angles = {}
+        obj.angles[name[0]] = Angle(obj.angle_name(name[0]))
+        obj.angles[name[1]] = Angle(obj.angle_name(name[1]))
+        obj.angles[name[2]] = Angle(obj.angle_name(name[2]))
+        # obj.angles_out = {}
 
-            obj.run_rules()
-            Cobj.triangles[name] = obj
-
-        return Cobj.triangles[name]
+        obj.run_rules()
+        Cobj.triangles[name] = obj
+        return obj       
     
     @staticmethod
     def from_lines(a: Line, b: Line):
@@ -139,9 +140,12 @@ class Triangle:
             ray_name = "x"
         v1, v2 = self.get_other_points(from_v)
         
-        self.angles_out[from_v] = angle(ray_name + from_v + v1)
-        
-        Ceq(self.angles_out[from_v] + self.angles[from_v], 180)
+        #self.angles_out[from_v] = Angle(ray_name + from_v + v1)
+        #Ceq(self.angles_out[from_v] + self.angles[from_v], 180)
+
+        Line(v2 + ray_name, is_ray=True).add_point(from_v)
+
+        #Ceq(Angle(ray_name + from_v + v1).symb + self.angles[from_v], 180)
 
 
     # Phát sinh sự kiện: tia phân giác từ 1 góc trong tam giác, cắt cạnh đối diện tại 1 điểm thì chia đôi góc và tạo thành 2 tam giác khác
@@ -160,14 +164,7 @@ class Triangle:
 
     # Phát sinh sự kiện: tia từ 1 góc cắt cạnh đối diện tại 1 điểm
     def set_ray(self, from_v, to_v, m_v = None):
-        results = []
-        '''
-        vertex1: A
-        vertex2: C
-        from_vertex: B
-        to_vertex: K
-        middle_vertex: M
-        '''
+        
         v1, v2 = self.get_other_points(from_v)
 
         # generate 2 new triangle
@@ -211,42 +208,48 @@ class Triangle:
         # return results
 
     def set_bisector_out(self, from_v, ray_name):
-        # if don't have angle out yet, set it
-        if from_v not in self.angles_out:
-            self.set_angle_out(from_v)
 
-        # generate 2 new Cequal angles
-        angle_out_name = str(self.angles_out[from_v])
-        angle_out_1 = angle(angle_out_name[0] + angle_out_name[1] + ray_name)
-        angle_out_2 = angle(ray_name + angle_out_name[1] + angle_out_name[2])
+        #self.set_angle_out(from_v)
 
-        Ceq(angle_out_1, self.angles_out[from_v]/2)
-        Ceq(angle_out_2, self.angles_out[from_v]/2)
+        v1, v2 = self.get_other_points(from_v)
+        
+        # vẽ tia cho góc ngoài
+        out_ray = "x"
+        Line(v2 + out_ray, is_ray=True).add_point(from_v)
+
+        # kẻ tia phân giác
+        Line(from_v + ray_name, is_ray=True)
+        Ceq(Angle(out_ray + from_v + ray_name).symb, Angle(out_ray + from_v + v1).symb/2)
+        Ceq(Angle(ray_name + from_v + v1).symb, Angle(out_ray + from_v + v1).symb/2)
 
         # => 2 góc so le trong
-        v1, v2 = self.get_other_points(from_v)
-        angle_out_2_obj = get_angle_obj(str(angle_out_2))
-        tri_angle_v1 = get_angle_obj(str(self.angles[v1]))
-        add_relation(Crel("SO_LE_TRONG", angle_out_2_obj, tri_angle_v1))
+        #Relation.make("SO_LE_TRONG", Angle(ray_name + from_v + v1), Angle(v2 + v1 + from_v))
 
         # Phát sinh sự kiện: kẻ đường cao trong tam giác, cắt cạnh đối diện tại 1 điểm
     def set_height(self, from_v, to_v):
-
-        # generate 2 new triangle
         v1, v2 = self.get_other_points(from_v)
 
-        tri1 = Triangle(v1 + from_v + to_v)
-        tri2 = Triangle(to_v + from_v + v2)
+        # tri1 = Triangle(v1 + from_v + to_v)
+        # tri2 = Triangle(to_v + from_v + v2)
 
-        Ceq(tri1.angles[v1], self.angles[v1])
-        Ceq(tri2.angles[v2], self.angles[v2])
+        # Ceq(tri1.angles[v1], self.angles[v1])
+        # Ceq(tri2.angles[v2], self.angles[v2])
 
-        tri1.set_angle(to_v, 90)
-        tri2.set_angle(to_v, 90)
+        # tri1.set_angle(to_v, 90)
+        # tri2.set_angle(to_v, 90)
 
-        Ceq(tri1.angles[from_v] + tri2.angles[from_v], self.angles[from_v])
+        # Ceq(tri1.angles[from_v] + tri2.angles[from_v], self.angles[from_v])
 
-        return tri1, tri2
+        # return tri1, tri2
+
+         # đường cao
+        Line(from_v + to_v)
+        Angle(from_v + to_v + v1, 90)
+        Angle(v2 + to_v + from_v, 90)
+        
+        
+        # điểm to_v thuộc đoạn thẳng v1 v2 -> tạo thành 2 đoạn mới
+        Line(v2 + v1).add_point(to_v)
 
     
     
