@@ -2,7 +2,7 @@ from sympy import Symbol, solve, simplify
 from ceq import Ceq
 from utils import flat_list, remove_duplicates
 
-class SolverCompare:
+class SolverProve:
     
     def __init__(self, symbs, eqs):
         self.symbs = symbs
@@ -10,7 +10,6 @@ class SolverCompare:
         self.graph = self.load_graph()
 
     def load_graph(self):
-        
         graph = {}
         for symbol_row in self.symbs.keys():
             graph[symbol_row] = {}

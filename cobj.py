@@ -10,6 +10,8 @@ from unittest import result
 
 from sympy import  Eq, Symbol, solve, symbols
 
+from utils import next_alpha
+
 class Cobj:
     
     triangles = {}
@@ -19,26 +21,45 @@ class Cobj:
 
     symbs = {}
     eqs = []
+    ieqs = []
     relations = []
 
     hypo = {}
     knowns = {}
-
+    rule_depth = 0
     
     def symb(name, value = None, positive=True):
-        if type(value) in [int, float]:
-            if name in Cobj.symbs.keys():
-                # update all equations with new value
-                a_symbol = Cobj.symbs[name]
-                for i, a_eq in enumerate(Cobj.eqs):
-                    Cobj.eqs[i] = a_eq.subs(a_symbol, value)
+        # if type(value) in [int, float]:
+        #     if name in Cobj.symbs.keys():
+        #         # update all equations with new value
+        #         a_symbol = Cobj.symbs[name]
+        #         for i, a_eq in enumerate(Cobj.eqs):
+        #             Cobj.eqs[i] = a_eq.subs(a_symbol, value)
 
-            Cobj.symbs[name] = value
-        elif name not in Cobj.symbs.keys():
+        #     Cobj.symbs[name] = value
+        # elif name not in Cobj.symbs.keys():
+        #     Cobj.symbs[name] = symbols(name, positive=positive)
+
+        if name not in Cobj.symbs.keys():
             Cobj.symbs[name] = symbols(name, positive=positive)
+        if type(value) in [int, float]:
+            Cobj.knowns[name] = value
         
-        return Cobj.symbs[name]    
+        return Cobj.symbs[name]
 
+    def reset_state():
+        Cobj.triangles = {}
+        Cobj.angles = {}
+        Cobj.lines = {}
+        Cobj.points = {}
+
+        Cobj.symbs = {}
+        Cobj.eqs = []
+        Cobj.relations = []
+
+        Cobj.hypo = {}
+        Cobj.knowns = {}
+        Cobj.rule_depth = 0
     
     def get_triangle(name):
         tri_name = None
@@ -54,6 +75,19 @@ class Cobj:
         triangle = Cobj.get_triangle(name)
         return triangle is not None
 
+    def tri_name(name):
+        min_value = min(name)
+        min_index = name.index(min_value)
+        result = name[min_index] + name[(min_index+1)%3] + name[(min_index+2)%3]
+        return result
+        #return sort_name(name)
+
+    def is_in_triangle(p_name: str):
+        for tri in Cobj.triangles.values():
+            if hasattr(tri, "points") and p_name in tri.points.keys():
+                return True
+        return False
+
     
     def get_angle(name: str):
         angle_name = Cobj.get_angle_name(name)
@@ -67,16 +101,43 @@ class Cobj:
         else:
             angle_name = name
         return angle_name
-
     
     def set_angle(angle):
         if not Cobj.angle_exist(angle.name):
             Cobj.angles[angle.name] = angle
 
     
-    def angle_exist(name: str):
+    def angle_exist(name: str) -> bool:
         angle_name = Cobj.get_angle_name(name)
         return angle_name in Cobj.angles.keys()
+
+    def unset_angle(name):
+        angle = Cobj.get_angle(name)
+        angle.value = None
+        angle.symb = symbols(name, positive=True)
+
+    def get_line(name: str) -> str:
+        name_op = name[-1]+name[0]
+        if name in Cobj.lines.keys():
+            return Cobj.lines[name]
+        if name_op in Cobj.lines.keys():
+            return Cobj.lines[name_op]
+
+    def line_exist(name: str) -> bool:
+        return Cobj.get_line(name) is not None
+        
+
+    def get_rd_ray():
+        c = "x"
+        while Cobj.ray_exist(c):
+            c = next_alpha(c)
+        return c
+
+    def ray_exist(name):
+        for line in Cobj.lines.values():
+            if line.name[1] == name:
+                return True
+        return False
 
     def init_hypo():
         if len(Cobj.hypo) == 0:
@@ -121,7 +182,7 @@ class Cobj:
                 
             equations.append(new_eq)
 
-        eqs = [eq for eq in equations if eq is not True]
+        eqs = [eq for eq in equations if eq != True and eq != False]
         return eqs
 
     def get_simple_equations() -> List[Eq]:

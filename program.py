@@ -1,16 +1,14 @@
 
 from angle import Angle
 from ceq import Ceq
-from clog import Clog
+from crule import Crule
+from log import Log
 from cobj import Cobj
 from cokb import Cokb
-from crule import Crule
-from equation import Equation
 from goal import Goal
 from relation import Relation
 
-from sympy import Eq, simplify
-from line import Line
+from sympy import Eq
 from solver_compare import SolverCompare
 
 from triangle import Triangle
@@ -39,13 +37,26 @@ class Program:
 
     def set_angle(self, symbol_name, symbol_value):
         Angle(symbol_name, symbol_value)
+    
+    def unset_angle(self, symbol_name):
+        Cobj.unset_angle(symbol_name)
 
-    def set_bisector_in(self, tri_name, from_v, to_v):
+    def reset_state(self):
+        Cobj.reset_state()
+
+    def set_bisector_in(self, tri_name, from_v, to_v = None):
         triangle = Cobj.get_triangle(tri_name)
         if triangle is None:
             raise Exception("Set BISECTOR IN error. Could not find triangle")
 
         triangle.set_bisector_in(from_v, to_v)
+
+    def set_bisector_center(self, tri_name, center):
+        triangle = Cobj.get_triangle(tri_name)
+        if triangle is None:
+            raise Exception("Set BISECTOR IN error. Could not find triangle")
+
+        triangle.bisector_center = center
 
     def set_bisector_out(self, tri_name, from_v, ray_name):
         triangle = Cobj.get_triangle(tri_name)
@@ -61,13 +72,13 @@ class Program:
 
         triangle.set_height(from_v, to_v)
 
-    def set_ray(self, tri_name, from_v, to_v, m_v):
+    def set_ray(self, tri_name, from_v, m_v, to_v = None):
         triangle = Cobj.get_triangle(tri_name)
         if triangle is None:
-            raise Exception("Set BISECTOR error. Could not find triangle")
+            raise Exception("Set RAY error. Could not find triangle")
 
-        # vẽ tia từ góc cắt cạnh đối diện tại 1 điểm, nếu đi qua 1 điểm thì vẽ thêm 2 tia phân giác với 2 góc còn lại
-        triangle.set_ray(from_v, to_v, m_v)
+        # vẽ tia từ đỉnh qua điểm m, cắt đối diện tại to_v
+        triangle.set_ray(from_v, m_v, to_v)
 
     def set_equation(self, equation: Eq):
         Ceq.set_eq(equation)
@@ -77,10 +88,10 @@ class Program:
         self.goals.append(goal)
 
     # Kiểm tra kết luận đã có trong tập sự kiện đã biết hay chưa
-    def solve_goals(self):
+    def solve(self):
 
         Cobj.init_hypo()
-        Crule.apply_rules()
+        Crule.run()
 
         for goal in self.goals:
             if goal.status is not True: # Chỉ xét những mục tiêu chưa tìm được
@@ -90,9 +101,8 @@ class Program:
                         if len(goal_data) != 2:
                             raise Exception("Goal DETERMINE ANGLE error. Goal data must have 2 arguments")
 
-                        target_angle = Cobj.get_angle(goal_data[1])
-
-                        Cokb.bfs(target_angle.symb)
+                        angle = Cobj.get_angle(goal_data[1])
+                        Cokb.solve(angle.symb)
                             
                 if goal.goal_type == 2: # so sánh
                     if goal_data[0] == "ANGLE": # so sánh góc
@@ -103,9 +113,8 @@ class Program:
                         angle_2 = Cobj.get_angle(goal_data[2])
 
                         solver = SolverCompare(Cobj.symbs, Cobj.eqs)
-
                         success, logs = solver.solve_compare(angle_1.symb, angle_2.symb)
-                        Clog.print_logs(logs)
+                        Log.print_logs(logs)
 
                 if goal.goal_type == 3: # chứng minh 1 mối quan hệ
                     if isinstance(goal_data, Relation):
@@ -115,9 +124,18 @@ class Program:
                     if goal_data[0] != "ANGLE" or len(goal_data) != 2:
                         raise Exception("Goal FIND-ANGLE-COMPARE error. Goal data must have 2 arguments")
 
-                    target_symbol = Cobj.get_angle(goal_data[1])
-                    Cokb.solve_find_compare(target_symbol.symb)
+                    angle = Cobj.get_angle(goal_data[1])
+                    Cokb.solve_find_compare(angle.symb)
 
+                if goal.goal_type == 5: # chứng minh
+                    if goal_data[0] != "ANGLE" or len(goal_data) != 3:
+                        raise Exception("Goal PROVE ANGLE ATTRIBUTE error. Goal data must have 3 arguments")
+
+                    angle = Cobj.get_angle(goal_data[1])
+                    # if angle is None:
+                    #     Angle(goal_data[1])
+                    Cokb.prove(angle, goal_data[2])
+                    
 
 
 
