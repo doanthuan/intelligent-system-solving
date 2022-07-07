@@ -56,7 +56,7 @@ class Program:
         if triangle is None:
             raise Exception("Set BISECTOR IN error. Could not find triangle")
 
-        triangle.bisector_center = center
+        triangle.set_bisector_center(center)
 
     def set_bisector_out(self, tri_name, from_v, ray_name):
         triangle = Cobj.get_triangle(tri_name)
@@ -127,14 +127,14 @@ class Program:
                     angle = Cobj.get_angle(goal_data[1])
                     Cokb.solve_find_compare(angle.symb)
 
-                if goal.goal_type == 5: # chứng minh
-                    if goal_data[0] != "ANGLE" or len(goal_data) != 3:
-                        raise Exception("Goal PROVE ANGLE ATTRIBUTE error. Goal data must have 3 arguments")
+                # if goal.goal_type == 5: # chứng minh
+                #     if goal_data[0] != "ANGLE" or len(goal_data) != 3:
+                #         raise Exception("Goal PROVE ANGLE ATTRIBUTE error. Goal data must have 3 arguments")
 
-                    angle = Cobj.get_angle(goal_data[1])
-                    # if angle is None:
-                    #     Angle(goal_data[1])
-                    Cokb.prove(angle, goal_data[2])
+                #     angle = Cobj.get_angle(goal_data[1])
+                #     # if angle is None:
+                #     #     Angle(goal_data[1])
+                #     Cokb.prove(angle, goal_data[2])
                     
 
 

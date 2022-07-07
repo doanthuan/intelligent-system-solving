@@ -11,50 +11,6 @@ from point import Point
 
 # Rules: A=b <=> a=b; a**2 + b**2 + c**2 => A=90; ...
 
-'''
-RULES Nội Tại
-'''
-#RULE1: A + B + C = 180 độ
-def rule_01(tri: Triangle):
-    #Ceq(self.angles[self.name[0]].symb + self.angles[self.name[1]].symb + self.angles[self.name[2]].symb, 180)
-    angle1 = Angle(tri.name[2]+tri.name[0]+tri.name[1])
-    angle2 = Angle(tri.name[0]+tri.name[1]+tri.name[2])
-    angle3 = Angle(tri.name[1]+tri.name[2]+tri.name[0])
-    Ceq( angle1.symb + angle2.symb + angle3.symb, 180)
-
-# định lý về tia phân giác, đường cao trong tam giác
-def rule_02(tri: Triangle):
-    for from_v in tri.vertexs:
-        v1, v2 = tri.get_other_vertexs(from_v)
-        to_vs = []
-        if from_v in tri.heights.keys():
-            to_v = tri.heights[from_v].v2
-            Angle(from_v + to_v + v1, 90)
-            Angle(v2 + to_v + from_v, 90)
-            to_vs.append(to_v)
-
-        if from_v in tri.bisectors.keys():
-            to_v = tri.bisectors[from_v].v2
-            Ceq(Angle(v1 + from_v + to_v).symb, Angle(v1 + from_v + v2).symb/2)
-            Ceq(Angle(to_v + from_v + v2).symb, Angle(v1 + from_v + v2).symb/2)
-            if not tri.bisectors[from_v].is_ray:
-                to_vs.append(to_v)
-        
-        if len(to_vs) == 2 and Angle(from_v + v2 + v1).value is not None and Angle(from_v + v2 + v1).value < 45: # nếu góc bên trái nhỏ hơn 45 độ
-            to_vs = to_vs.reverse()
-        
-        Line(v2 + v1).add_point(to_vs)
-
-# định lý về góc tam giác nhỏ trong tam giác lớn
-def rule_03(tri1: Triangle):
-    for tri2 in Cobj.triangles.values():
-        points = tri1.part_of(tri2)
-        if points is None:
-            points = tri2.part_of(tri1)
-        if points is not None:
-            E = Angle(points[1]+points[2]+points[0])
-            A = Angle(points[1]+points[3]+points[0])
-            Ceq.ieq(A.symb < E.symb)
 
 
 class Triangle:
@@ -114,26 +70,6 @@ class Triangle:
         rule_02(self)
         rule_03(self)
 
-    
-    @staticmethod
-    def from_lines(a: Line, b: Line) -> str:
-        if not a.is_connect(b):
-            return False
-        A, B, C = a.join_vertexs(b)
-        return A + B + C
-
-    @staticmethod
-    def is_triangle(a: Line, b: Line, c: Line):
-        if not a.is_connect(b) or c.is_ray:
-            return False
-        
-        if (
-            (Cobj.line_exist(a.v1.name + b.v2.name) and Line(a.v1.name + b.v2.name).is_belongs_bi(c))
-         or (Cobj.line_exist(a.v2.name + b.v1.name) and Line(a.v2.name + b.v1.name).is_belongs_bi(c))
-         ):
-            return True
-        return False
-
     def angle_name(self, v):
         v1, v2 = self.get_other_vertexs(v)
         #vertexs = sort_name(vertex1 + vertex2)
@@ -156,12 +92,21 @@ class Triangle:
 
 
     def part_of(self, tri: Triangle) -> str:
-        for angle_i in self.angles.values():
-            for angle_j in tri.angles.values():
-                if angle_j.is_adjacent_parent(angle_i) and angle_j.name[2] == angle_i.name[2]:
-                    return angle_i.name[1] + angle_i.name[2] + angle_i.name[0] + angle_j.name[0]
-                if angle_j.is_adjacent_parent(angle_i) and angle_j.name[0] == angle_i.name[0]:
-                    return angle_i.name[0] + angle_i.name[1] + angle_i.name[2] + angle_j.name[2]
+        # for angle_i in self.angles.values():
+        #     for angle_j in tri.angles.values():
+                # if angle_j.is_adjacent_parent(angle_i) and angle_j.name[2] == angle_i.name[2]:
+                #     return angle_i.name[1] + angle_i.name[2] + angle_i.name[0] + angle_j.name[0]
+                # if angle_j.is_adjacent_parent(angle_i) and angle_j.name[0] == angle_i.name[0]:
+                #     return angle_i.name[0] + angle_i.name[1] + angle_i.name[2] + angle_j.name[2]
+        if self.name == tri.name or len(tri.points) == 0:
+            return None
+        #tri_points = tri.name+''.join(tri.points)
+        for v in self.name:
+            v1, v2 = self.get_other_vertexs(v)
+            if v in tri.name and v2 in tri.name and v1 in tri.points:
+                new_name = tri.name.replace(v, "")
+                new_name = new_name.replace(v2, "")
+                return v + v2 + v1 + new_name
         return None
 
 
@@ -172,6 +117,11 @@ class Triangle:
 
         # tia phân giác
         self.bisectors[from_v] = Line(from_v + to_v)
+        self.run_rules()
+
+    # Giao điểm tia phân giác trong
+    def set_bisector_center(self, c_p):
+        self.bisector_center = c_p
         self.run_rules()
               
 
@@ -220,5 +170,47 @@ class Triangle:
 
     
 
-    
+
+'''
+RULES Nội Tại
+'''
+#RULE1: A + B + C = 180 độ
+def rule_01(tri: Triangle):
+    #Ceq(self.angles[self.name[0]].symb + self.angles[self.name[1]].symb + self.angles[self.name[2]].symb, 180)
+    angle1 = Angle(tri.name[2]+tri.name[0]+tri.name[1])
+    angle2 = Angle(tri.name[0]+tri.name[1]+tri.name[2])
+    angle3 = Angle(tri.name[1]+tri.name[2]+tri.name[0])
+    Ceq( angle1.symb + angle2.symb + angle3.symb, 180)
+
+# định lý về tia phân giác, đường cao trong tam giác
+def rule_02(tri: Triangle):
+    for from_v in tri.vertexs:
+        v1, v2 = tri.get_other_vertexs(from_v)
+        to_vs = []
+        if from_v in tri.heights.keys():
+            to_v = tri.heights[from_v].name[1]
+            Angle(from_v + to_v + v1, 90)
+            Angle(v2 + to_v + from_v, 90)
+            to_vs.append(to_v)
+
+        if from_v in tri.bisectors.keys():
+            to_v = tri.bisectors[from_v].name[1]
+            Ceq(Angle(v1 + from_v + to_v).symb, Angle(v1 + from_v + v2).symb/2)
+            Ceq(Angle(to_v + from_v + v2).symb, Angle(v1 + from_v + v2).symb/2)
+            if not tri.bisectors[from_v].is_ray:
+                to_vs.append(to_v)
+        
+        if len(to_vs) == 2 and Angle(from_v + v2 + v1).value is not None and Angle(from_v + v2 + v1).value < 45: # nếu góc bên trái nhỏ hơn 45 độ
+            to_vs = to_vs.reverse()
+        
+        Line(v2 + v1).add_point(to_vs)
+
+# tia phân giác tới giao điểm 3 tia
+def rule_03(triangle: Triangle):
+    if triangle.bisector_center is not None:
+        for from_v in triangle.vertexs:
+            if from_v in triangle.bisectors.keys():
+                triangle.bisectors[from_v].add_point(triangle.bisector_center)  
+
+  
     

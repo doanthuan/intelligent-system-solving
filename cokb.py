@@ -89,21 +89,13 @@ class Cokb:
 
         Cokb.bfs()
 
-        # duyet
-        step = 1
-        while step < 10:
-
-            Crule.run()
-
-            # check if all targets are found
-            if Relation.exist(relation):
-                print("FOUND")
-                # print trace rules
-                Log.print_trace_rels(relation)
-                return True
-
-            step += 1  
-
+         # check if all targets are found
+        if Relation.exist(relation):
+            print("FOUND")
+            # print trace rules
+            Log.print_trace_rules(relation)
+            return True
+        
         return False
 
 
@@ -129,16 +121,15 @@ class Cokb:
 
         return results
         
-    def prove(target, attribute):
-        Cokb.bfs()
+    # def prove(target, attribute):
+    #     Cokb.bfs()
 
-        # check if target are found
-        if str(target) in Cobj.knowns.keys():
-            Log.print_solution(target)
-            return True
+    #     target.run_rules()
 
-        ieq = Ceq.get_ieq_by_symb(target.symb)
+    #     if target.type == attribute:
+    #         Log.print_trace_rules(target)
+    #         return True
 
-        return False
+    #     return False
 
     

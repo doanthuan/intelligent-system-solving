@@ -185,6 +185,14 @@ class Cobj:
         eqs = [eq for eq in equations if eq != True and eq != False]
         return eqs
 
+    def sub_ieq_with_knowns(ieq):
+        new_ieq = copy(ieq)
+        for a_symbol in ieq.free_symbols:
+            if str(a_symbol) in Cobj.knowns.keys():
+                new_ieq = new_ieq.subs(a_symbol, Cobj.knowns[str(a_symbol)])
+            
+        return new_ieq
+
     def get_simple_equations() -> List[Eq]:
         simple_eqs = []
         for a_eq in Cobj.eqs:

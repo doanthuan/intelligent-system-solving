@@ -6,24 +6,11 @@ from sympy import Symbol, symbols
 from ceq import Ceq
 from cobj import Cobj
 from line import Line
+from log import Log
+from relation import Relation
 
-'''
-RULES Nội Tại
-'''
-# xét 2 góc bằng nhau từ 2 cạnh
-def rule_01(A):
-    for B in list(Cobj.angles.values()):
-        if A.is_belongs(B):
-            A.set_equal(B)
 
-# xét 2 góc kề -> tổng = góc lớn
-def rule_02(A):
-    for B in list(Cobj.angles.values()):
-        if A.is_adjacent(B) and not A.is_complementary(B):
-            adj_angle = A.get_adjacent_parent(B)
-            Ceq(A.symb + B.symb, adj_angle.symb)
-            Ceq.ieq(A.symb < adj_angle.symb)
-            Ceq.ieq(B.symb < adj_angle.symb)
+
 
 class Angle(object):
 
@@ -46,18 +33,17 @@ class Angle(object):
             self.line1 = Line(name[0]+name[1])
             self.line2 = Line(name[1]+name[2])
             self.symb = Cobj.symb(self.ident_symb(), value)
-
             self.value = value
-            self.type = value
-            if value is not None:
-                self.value = int(value)
-                self.type = "obtuse" if value > 90 else "acute"
-
             self.run_rules()
 
     def run_rules(self):
+        #self.line1.run_rules()
+        #self.line2.run_rules()
         rule_01(self)
         rule_02(self)
+        rule_03(self)
+        rule_04(self)
+        rule_05(self)
 
     @staticmethod
     def is_triangle(angle1: Angle, angle2: Angle):
@@ -123,6 +109,8 @@ class Angle(object):
         
 
     def get_adjacent_parent(self, angle: Angle) -> Angle:
+        if not self.is_adjacent(angle) and self.is_complementary(angle):
+            return False
 
         if self.line2.is_belongs_bi(angle.line1):
             name = self.name[0] + self.name[1] + angle.name[2]
@@ -159,4 +147,51 @@ class Angle(object):
 
 
 
-        
+
+'''
+RULES Nội Tại
+'''
+
+# tạo tam giác từ góc và cạnh đối diện
+def rule_01(A: Angle):
+    from triangle import Triangle
+    for b in list(Cobj.lines.values()):
+        if (A.name[0] == b.name[0] and A.name[2] == b.name[1]) or (A.name[0] == b.name[1] and A.name[2] == b.name[0]):
+                tri_name = Cobj.tri_name(A.name)
+                if not Cobj.triangle_exist(tri_name):
+                    Triangle(tri_name)
+
+# xét 2 góc bằng nhau từ 2 cạnh
+def rule_02(A: Angle):
+    for B in list(Cobj.angles.values()):
+        if A.is_belongs(B):
+            A.set_equal(B)
+
+# xét 2 góc kề -> tổng = góc lớn
+def rule_03(A: Angle):
+    for B in list(Cobj.angles.values()):
+        if A.is_adjacent(B) and not A.is_complementary(B):
+            adj_angle = A.get_adjacent_parent(B)
+            Ceq(A.symb + B.symb, adj_angle.symb)
+            Ceq.ieq(A.symb < adj_angle.symb)
+            Ceq.ieq(B.symb < adj_angle.symb)
+
+# góc tù
+def rule_04(A: Angle):
+    if A.value is not None and A.value > 90:
+        Relation.make("GOC_TU", A)
+        return
+
+    ieq = Ceq.get_ieq_by_symb(A.symb)
+    if ieq is not None:
+        new_ieq = Cobj.sub_ieq_with_knowns(ieq)
+        if new_ieq != True and new_ieq != False and new_ieq.equals(A.symb > 90):
+            rel = Relation.make("GOC_TU", A)
+            if rel is not None:
+                Log.trace_rule(rel, "rule_04", [ieq] )
+
+# xét 2 góc kề bù -> tổng = 180
+def rule_05(A: Angle):
+    for B in list(Cobj.angles.values()):
+        if A.is_complementary(B):
+            Ceq(A.symb + B.symb, 180)

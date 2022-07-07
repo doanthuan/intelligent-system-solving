@@ -20,6 +20,7 @@ class Ceq:
     def ieq(expr):
         if not Ceq.ieq_exist(expr):
             Cobj.ieqs.append(expr)
+            return expr
 
     def set_eq(eq: Eq):
         if eq == True or eq == False:

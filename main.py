@@ -104,25 +104,25 @@ if __name__ == "__main__":
 
     # solver.solve()
 
-    # '''
-    # Bài 11 - Trang 138 Bài Tập Hình Học lớp 7
-    # '''
-    # solver = Program()
-    # solver.set_triangle("ABC")
+    '''
+    Bài 11 - Trang 138 Bài Tập Hình Học lớp 7
+    '''
+    solver = Program()
+    solver.set_triangle("ABC")
 
-    # solver.set_angle('ABC', 70)
+    solver.set_angle('ABC', 70)
 
-    # solver.set_angle('BCA', 30)
+    solver.set_angle('BCA', 30)
 
-    # solver.set_bisector_in('ABC', 'A', 'D')
+    solver.set_bisector_in('ABC', 'A', 'D')
 
-    # solver.set_height('ABC', 'A', 'H')
+    solver.set_height('ABC', 'A', 'H')
 
-    # solver.add_goal(1 , ("ANGLE", "CAB"))
-    # solver.add_goal(1 , ("ANGLE", "HDA"))
-    # solver.add_goal(1 , ("ANGLE", "HAD"))
+    solver.add_goal(1 , ("ANGLE", "CAB"))
+    solver.add_goal(1 , ("ANGLE", "HDA"))
+    solver.add_goal(1 , ("ANGLE", "HAD"))
 
-    # solver.solve()
+    solver.solve()
 
     # '''
     # Bài 12 - Trang 138 Bài Tập Hình Học lớp 7
@@ -149,17 +149,18 @@ if __name__ == "__main__":
 
     # program.solve()
 
-    '''
-    Bài 15 - Trang 138 Bài Tập Hình Học lớp 7
-    '''
-    program = Program()
-    program.set_triangle("ABC")
-    program.set_angle('CAB', 90)
+    # '''
+    # Bài 15 - Trang 138 Bài Tập Hình Học lớp 7
+    # '''
+    # program = Program()
+    # program.set_triangle("ABC")
+    # program.set_angle('CAB', 90)
 
-    program.set_ray('ABC', 'B', 'E')
+    # program.set_ray('ABC', 'B', 'E')
 
-    program.add_goal(5, ("ANGLE", "CEB", "obtuse"))
-    program.solve()
+    # #program.add_goal(5, ("ANGLE", "CEB", "obtuse"))
+    # program.add_goal(3 , Relation("GOC_TU", Angle("CEB"))) # chứng mình 1 mối liên hệ
+    # program.solve()
 
 
 
