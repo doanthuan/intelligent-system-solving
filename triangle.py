@@ -1,9 +1,12 @@
 from __future__ import annotations
-from angle import Angle
+
 from ceq import Ceq
 from cobj import Cobj
+from angle import Angle
 from line import Line
+from log import Log
 from point import Point
+from relation import Relation
 
 # Attributes: A,B,C,a,b,c,S,p,R
 
@@ -34,23 +37,33 @@ class Triangle:
             # tri name
             self.name = name
 
-            # 3 vertexts
+            # 3 vertexs
             self.vertexs = {}
             self.vertexs[name[0]] = Point(name[0])
             self.vertexs[name[1]] = Point(name[1])
             self.vertexs[name[2]] = Point(name[2])
+            self.v1 = Point(name[0])
+            self.v2 = Point(name[1])
+            self.v3 = Point(name[2])
+            #self.vertexs = [str(self.v1),str(self.v2),str(self.v3)]
 
             # 3 edges
             self.edges = {}
-            self.edges[name[0]+name[1]] = Line(name[0]+name[1])
-            self.edges[name[1]+name[2]] = Line(name[1]+name[2])
-            self.edges[name[2]+name[0]] = Line(name[2]+name[0])
+            self.edges[name[0]] = Line(name[0]+name[1])
+            self.edges[name[1]] = Line(name[1]+name[2])
+            self.edges[name[2]] = Line(name[2]+name[0])
+            self.e1 = Line(name[0]+name[1])
+            self.e2 = Line(name[1]+name[2])
+            self.e3 = Line(name[2]+name[0])
 
             # 3 angles
             self.angles = {}
             self.angles[name[0]] = Angle(self.angle_name(name[0]))
             self.angles[name[1]] = Angle(self.angle_name(name[1]))
             self.angles[name[2]] = Angle(self.angle_name(name[2]))
+            self.a1 = Angle(self.angle_name(name[0]))
+            self.a2 = Angle(self.angle_name(name[1]))
+            self.a3 = Angle(self.angle_name(name[2]))
 
             # 3 heights
             self.heights = {}
@@ -60,15 +73,27 @@ class Triangle:
             self.bisectors = {}
             self.bisector_center = None
 
+            # 3 medians
+            self.medians = {}
+            self.median_center = None
+
             # inside points
             self.points = {}
 
-            self.run_rules()
+            # chu vi
+            self.p = None
 
-    def run_rules(self):
+            self.attrs = None
+            self.iso_point = None
+            self.rules()
+
+    
+    def rules(self):
         rule_01(self)
         rule_02(self)
-        rule_03(self)
+
+    def __str__(self):
+        return f"TAM_GIAC: {self.name}"
 
     def angle_name(self, v):
         v1, v2 = self.get_other_vertexs(v)
@@ -88,19 +113,24 @@ class Triangle:
             for c_name in self.name:
                 if c_name not in vertex_name:
                     return c_name
+    def next_v(self, v):
+        i_vertex = self.name.index(v)
+        i_next = i_vertex + 1
+        if i_next > 2:
+            i_next = 0
+        return self.name[i_next]
 
+    # def get_other_edges(self, edge):
+    #     for e in self.edges:
+    #         if e.name == edge.name:
+    #             return 
 
+    def is_ident(self, triangle: Triangle) -> bool:
+        return self.name == triangle.name
 
     def part_of(self, tri: Triangle) -> str:
-        # for angle_i in self.angles.values():
-        #     for angle_j in tri.angles.values():
-                # if angle_j.is_adjacent_parent(angle_i) and angle_j.name[2] == angle_i.name[2]:
-                #     return angle_i.name[1] + angle_i.name[2] + angle_i.name[0] + angle_j.name[0]
-                # if angle_j.is_adjacent_parent(angle_i) and angle_j.name[0] == angle_i.name[0]:
-                #     return angle_i.name[0] + angle_i.name[1] + angle_i.name[2] + angle_j.name[2]
         if self.name == tri.name or len(tri.points) == 0:
             return None
-        #tri_points = tri.name+''.join(tri.points)
         for v in self.name:
             v1, v2 = self.get_other_vertexs(v)
             if v in tri.name and v2 in tri.name and v1 in tri.points:
@@ -109,6 +139,43 @@ class Triangle:
                 return v + v2 + v1 + new_name
         return None
 
+    def set_angle(self, angle_name, angle_value):
+        self.angles[angle_name].set_value(angle_value)
+
+    def set_isosceles(self, v):
+        attr = "TG_CAN"
+        if self.attrs == attr:
+            return
+
+        self.attrs = attr
+        self.iso_point = v
+
+        v1, v2 = self.get_other_vertexs(v)
+
+        self.angles[v1].set_equal(self.angles[v2])
+
+        self.edges[v].set_equal(self.edges[v1])
+
+        return Relation.make(attr, self)
+        
+
+    def set_equilateral(self):
+        attr = "TG_DEU"
+        if self.attrs == attr:
+            return
+
+        rel = Relation.make(attr, self)
+
+        self.attrs  = attr
+
+        self.a1.set_equal(self.a2)
+        self.a1.set_equal(self.a3)
+
+        self.e1.set_equal(self.e2)
+        self.e1.set_equal(self.e3)
+
+        
+        return rel
 
     # Tia phân giác trong
     def set_bisector_in(self, from_v, to_v = None):
@@ -117,18 +184,29 @@ class Triangle:
 
         # tia phân giác
         self.bisectors[from_v] = Line(from_v + to_v)
-        self.run_rules()
 
     # Giao điểm tia phân giác trong
     def set_bisector_center(self, c_p):
         self.bisector_center = c_p
-        self.run_rules()
               
-
     # Đường cao
     def set_height(self, from_v, to_v):
         self.heights[from_v] = Line(from_v + to_v)
-        self.run_rules()
+
+    # trung tuyến
+    def set_median(self, from_v, to_v):
+        self.medians[from_v] = Line(from_v + to_v)
+
+    def set_3_lines(self, v):
+        if self.bisectors[v] is not None: # tia phân giác -> đường cao, trung tuyến
+            self.heights[v] = self.bisectors[v]
+            self.medians[v] = self.bisectors[v]
+        elif self.heights[v] is not None: # đường cao -> tia phân giác, trung tuyến
+            self.bisectors[v] = self.heights[v]
+            self.medians[v] = self.heights[v]
+        elif self.medians[v] is not None: # trung tuyến -> tia phân giác, đường cao
+            self.bisectors[v] = self.medians[v]
+            self.heights[v] = self.medians[v]
         
     # Phát sinh sự kiện: tia từ 1 góc cắt cạnh đối diện tại 1 điểm
     def set_ray(self, from_v, m_v, to_v):
@@ -151,7 +229,6 @@ class Triangle:
             # nối 2 đỉnh còn lại
             Line(v1 + m_v)
             Line(v2 + m_v)
-        self.run_rules()
 
     def set_bisector_out(self, from_v, ray_name):
         v1, v2 = self.get_other_vertexs(from_v)
@@ -165,52 +242,45 @@ class Triangle:
         Line(from_v + ray_name)
         Ceq(Angle(out_ray + from_v + ray_name).symb, Angle(out_ray + from_v + v1).symb/2)
         Ceq(Angle(ray_name + from_v + v1).symb, Angle(out_ray + from_v + v1).symb/2)
-        self.run_rules()
 
 
-    
+    def set_equal(self, tri: Triangle, v1 = None, v2 = None, v3 = None):
+        if v1 is None and v2 is None and v3 is None: # from hypo
+            # 3 edges
+            self.e1.set_equal(tri.e1)
+            self.e2.set_equal(tri.e2)
+            self.e3.set_equal(tri.e3)
+
+            # 3 angles
+            self.a1.set_equal(tri.a1)
+            self.a2.set_equal(tri.a2)
+            self.a3.set_equal(tri.a3)
+        else: # by edges
+            # self.e1.set_equal(tri.edges[v1])
+            # self.e2.set_equal(tri.edges[v2])
+            # self.e3.set_equal(tri.edges[v3])
+
+            rel = Relation.make("TG_BANG_NHAU", self, tri)
+            eq1 = self.a1.set_equal(tri.angles[v1])
+            Log.trace_obj(eq1, "(Definition)", [rel])
+            eq2 = self.a2.set_equal(tri.angles[v2])
+            Log.trace_obj(eq2, "(Definition)", [rel])
+            eq3 = self.a3.set_equal(tri.angles[v3])
+            Log.trace_obj(eq3, "(Definition)", [rel])
+
+            return rel
 
 
-'''
-RULES Nội Tại
-'''
 #RULE1: A + B + C = 180 độ
 def rule_01(tri: Triangle):
-    #Ceq(self.angles[self.name[0]].symb + self.angles[self.name[1]].symb + self.angles[self.name[2]].symb, 180)
-    angle1 = Angle(tri.name[2]+tri.name[0]+tri.name[1])
-    angle2 = Angle(tri.name[0]+tri.name[1]+tri.name[2])
-    angle3 = Angle(tri.name[1]+tri.name[2]+tri.name[0])
-    Ceq( angle1.symb + angle2.symb + angle3.symb, 180)
+    Ceq( tri.a1.symb + tri.a2.symb + tri.a3.symb, 180)
 
-# định lý về tia phân giác, đường cao trong tam giác
-def rule_02(tri: Triangle):
-    for from_v in tri.vertexs:
-        v1, v2 = tri.get_other_vertexs(from_v)
-        to_vs = []
-        if from_v in tri.heights.keys():
-            to_v = tri.heights[from_v].name[1]
-            Angle(from_v + to_v + v1, 90)
-            Angle(v2 + to_v + from_v, 90)
-            to_vs.append(to_v)
+# tam giác cân ( hoặc đều ) -> trung tuyến = tia phân giác = đường cao
+def rule_02(triangle: Triangle):
+    if triangle.attrs == "TG_CAN":
+        v = triangle.iso_point
+        triangle.set_3_lines(v)
 
-        if from_v in tri.bisectors.keys():
-            to_v = tri.bisectors[from_v].name[1]
-            Ceq(Angle(v1 + from_v + to_v).symb, Angle(v1 + from_v + v2).symb/2)
-            Ceq(Angle(to_v + from_v + v2).symb, Angle(v1 + from_v + v2).symb/2)
-            if not tri.bisectors[from_v].is_ray:
-                to_vs.append(to_v)
-        
-        if len(to_vs) == 2 and Angle(from_v + v2 + v1).value is not None and Angle(from_v + v2 + v1).value < 45: # nếu góc bên trái nhỏ hơn 45 độ
-            to_vs = to_vs.reverse()
-        
-        Line(v2 + v1).add_point(to_vs)
-
-# tia phân giác tới giao điểm 3 tia
-def rule_03(triangle: Triangle):
-    if triangle.bisector_center is not None:
-        for from_v in triangle.vertexs:
-            if from_v in triangle.bisectors.keys():
-                triangle.bisectors[from_v].add_point(triangle.bisector_center)  
-
-  
-    
+    if triangle.attrs == "TG_DEU":
+        for v in triangle.name:
+            triangle.set_3_lines(v)

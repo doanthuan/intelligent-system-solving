@@ -3,7 +3,6 @@ from queue import Queue
 from typing import List, Union
 from sympy import  Eq, Symbol, solve, symbols
 from copy import copy, deepcopy
-from angle import Angle
 
 from ceq import Ceq
 from log import Log
@@ -12,6 +11,8 @@ from crule import Crule
 from relation import Relation
 from solver_compare import SolverCompare
 from utils import flat_list, remove_duplicates
+from angle import Angle
+
 
 class Cokb:
        
@@ -25,7 +26,7 @@ class Cokb:
         if len(result) > 0:
             for sol_symbol, value in result.items():
                 Cobj.knowns[str(sol_symbol)] = value
-                Log.trace_paths[str(sol_symbol)] = eqs
+                Log.trace_symbols[str(sol_symbol)] = Cobj.get_rel_equations(sol_symbol)
             return True
         else:
             return False
@@ -49,12 +50,13 @@ class Cokb:
         Cobj.knowns[str(sol_symbol)] = sol_value[0]
 
         #trace symbol
-        Log.trace_paths[str(sol_symbol)] = a_eq
+        Log.trace_symbols[str(sol_symbol)] = a_eq
 
         return sol_symbol, sol_value[0]
 
     # lan truyền
     def bfs():
+        Log.reset()
         step = 1
         while step < 5:
 
@@ -63,6 +65,7 @@ class Cokb:
             # tìm những equation giải được ngay
             rel_eqs = Cobj.get_simple_equations()
             if len(rel_eqs) == 0:
+               Cokb.solve_unknown()
                return                    
             for a_eq in rel_eqs:
                 Cokb.solve_equation(a_eq)
@@ -72,36 +75,26 @@ class Cokb:
     def solve(target):
         Cokb.bfs()
 
-        # check if target are found
-        if str(target) in Cobj.knowns.keys() or Cokb.solve_unknown():
-            Log.print_solution(target)
-            return True
+        if isinstance(target, Symbol) and str(target) in Cobj.knowns.keys():
+            Log.print_solution(target, False)
+            return Log.logs
 
-        return False
+        if isinstance(target, Relation) and Relation.exist(target):
+            Log.print_trace_objs(target)
+            return Log.logs
 
-        # # still not found -> try to find compare
-        # solver = SolverCompare(Cobj.symbs, Cobj.eqs)
-        # success, result, logs = solver.solve_compare(Angle("CAB").symb, target)
-        # if success:
-        #     Log.print_logs(logs)
-    
-    def solve_relation(relation: Relation) -> bool:
+        if isinstance(target, Eq) and Cobj.equation_true(target):
+            Log.log(f"TARGET: {target}")
+            for a_symbol in target.free_symbols:
+                Log.print_trace_symbols(a_symbol)
+            return Log.logs
 
-        Cokb.bfs()
-
-         # check if all targets are found
-        if Relation.exist(relation):
-            print("FOUND")
-            # print trace rules
-            Log.print_trace_rules(relation)
-            return True
-        
-        return False
-
+        return []
 
     def solve_find_compare(target, ret = False):
         results = {}
-        solver = SolverCompare(Cobj.symbs, Cobj.eqs)
+        eqs = Cobj.subs_eqs_with_hypo()
+        solver = SolverCompare(Cobj.symbs, eqs)
 
         unknown_symbols = Cobj.get_unknown()
         for a_symbol in unknown_symbols.values():
@@ -115,21 +108,8 @@ class Cokb:
                 if not ret:
                     print("FOUND")
                     Log.print_logs(logs)
-                    return
+                    return logs
                 else:
                     results[str(a_symbol)] = result
 
         return results
-        
-    # def prove(target, attribute):
-    #     Cokb.bfs()
-
-    #     target.run_rules()
-
-    #     if target.type == attribute:
-    #         Log.print_trace_rules(target)
-    #         return True
-
-    #     return False
-
-    

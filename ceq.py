@@ -1,8 +1,3 @@
-# from angle import Angle
-# from line import Line
-# from point import Point
-# from triangle import Triangle
-
 from cobj import Cobj
 from sympy import Eq
 
@@ -16,6 +11,7 @@ class Ceq:
     def eq(lhs, rhs):
         eq = Eq(lhs, rhs)
         Ceq.set_eq(eq)
+        return eq
 
     def ieq(expr):
         if not Ceq.ieq_exist(expr):
@@ -29,8 +25,10 @@ class Ceq:
             Cobj.eqs.append(eq)
 
     def eq_exist(eq: Eq):
+        if eq == True:
+            return True
         for a_eq in Cobj.eqs:
-            if a_eq.lhs == eq.lhs and a_eq.rhs == eq.rhs:
+            if (a_eq.lhs == eq.lhs and a_eq.rhs == eq.rhs) or (a_eq.lhs == eq.rhs and a_eq.rhs == eq.lhs):
                 return True
         return False
 
@@ -43,8 +41,20 @@ class Ceq:
         return False
 
     def get_ieq_by_symb(a_symbol):
+        ieqs = []
         for ieq in Cobj.ieqs:
             if a_symbol in ieq.free_symbols:
-                return ieq
+                ieqs.append(ieq)
+        return ieqs 
+
+    def check_ieq(expr):
+        if Ceq.ieq_exist(expr):
+            return True
+            
+        new_ieqs = Cobj.sub_ieq_with_knowns(Cobj.ieqs)
+        for new_ieq in new_ieqs:
+            if new_ieq.equals(expr):
+                return True
+        return False
 
 

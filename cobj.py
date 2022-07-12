@@ -26,7 +26,6 @@ class Cobj:
 
     hypo = {}
     knowns = {}
-    rule_depth = 0
     
     def symb(name, value = None, positive=True):
         # if type(value) in [int, float]:
@@ -43,6 +42,7 @@ class Cobj:
         if name not in Cobj.symbs.keys():
             Cobj.symbs[name] = symbols(name, positive=positive)
         if type(value) in [int, float]:
+            Cobj.hypo[name] = value
             Cobj.knowns[name] = value
         
         return Cobj.symbs[name]
@@ -59,7 +59,10 @@ class Cobj:
 
         Cobj.hypo = {}
         Cobj.knowns = {}
-        Cobj.rule_depth = 0
+
+    def count():
+        return (len(Cobj.triangles) + len(Cobj.angles) + len(Cobj.lines) + len(Cobj.points) + len(Cobj.symbs)
+        + len(Cobj.eqs) + len(Cobj.ieqs) + len(Cobj.relations) + len(Cobj.hypo) + len(Cobj.knowns))
     
     def get_triangle(name):
         tri_name = None
@@ -140,11 +143,14 @@ class Cobj:
         return False
 
     def init_hypo():
-        if len(Cobj.hypo) == 0:
-            for key, value in Cobj.symbs.items():
-                if not isinstance(value, Symbol) :
-                    Cobj.hypo[key] = value
-                    Cobj.knowns[key] = value
+        # if len(Cobj.hypo) == 0:
+        #     for key, value in Cobj.symbs.items():
+        #         if not isinstance(value, Symbol) :
+        #             Cobj.hypo[key] = value
+        #             Cobj.knowns[key] = value
+        for key, value in Cobj.hypo.items():
+            if not isinstance(value, Symbol) :
+                Cobj.knowns[key] = value
         return Cobj.knowns
     
     
@@ -185,13 +191,17 @@ class Cobj:
         eqs = [eq for eq in equations if eq != True and eq != False]
         return eqs
 
-    def sub_ieq_with_knowns(ieq):
-        new_ieq = copy(ieq)
-        for a_symbol in ieq.free_symbols:
-            if str(a_symbol) in Cobj.knowns.keys():
-                new_ieq = new_ieq.subs(a_symbol, Cobj.knowns[str(a_symbol)])
+    def sub_ieq_with_knowns(ieqs):
+        new_ieqs = []
+        for ieq in ieqs:
+            new_ieq = copy(ieq)
+            for a_symbol in ieq.free_symbols:
+                if str(a_symbol) in Cobj.knowns.keys():
+                    new_ieq = new_ieq.subs(a_symbol, Cobj.knowns[str(a_symbol)])
+                    if new_ieq != True and new_ieq != False:
+                        new_ieqs.append(new_ieq)
             
-        return new_ieq
+        return new_ieqs
 
     def get_simple_equations() -> List[Eq]:
         simple_eqs = []
@@ -217,4 +227,11 @@ class Cobj:
                 results.append(str(a_symb))
         return results
 
+    def get_rel_equations(symb):
+        eqs= []
+        for a_eq in Cobj.eqs:
+            if symb in a_eq.free_symbols and a_eq != True and a_eq != False:
+                eqs.append(a_eq)
+                continue
+        return eqs
     

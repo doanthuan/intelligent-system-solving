@@ -1,5 +1,6 @@
 from sympy import Symbol, solve, simplify
 from ceq import Ceq
+from cobj import Cobj
 from utils import flat_list, remove_duplicates
 
 class SolverCompare:

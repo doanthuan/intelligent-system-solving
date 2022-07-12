@@ -1,8 +1,10 @@
 from __future__ import annotations
 from typing import List
 
-from sympy import symbols
+from sympy import Eq, symbols
+from ceq import Ceq
 from cobj import Cobj
+from log import Log
 from point import Point
 from utils import get_permutations
 
@@ -36,7 +38,7 @@ class Line:
     def triangle_name(a: Line, b: Line) -> str:
         if not a.is_connect(b):
             return False
-        A, B, C = a.join_vertexs(b)
+        A, B, C = a.connect_points(b)
         return A + B + C
 
     def __new__(cls, points: str, value = None):
@@ -62,17 +64,39 @@ class Line:
             self.value = value
             self.symb = symbols(name, positive=True)
             self.points = [str(p) for p in points]
-            #self.run_rules()
-
-    def run_rules(self):
-        # rule_01(self)
-        rule_01(self)
+            self.m_p = None
+            self.rules()
+    
+    def rules(self):
+        if self.value is not None:
+            rule_01(self)
 
     def __str__(self):
         return f"{self.name}"
 
+    def set_equal(self, line: Line):
+        Ceq(self.symb, line.symb)
+        if line.value is not None:
+            self.set_value(line.value)
+        elif self.value is not None:
+            line.set_value(self.value)
+
+        self.rules()
+
+    def set_value(self, value):
+        self.value = int(value)
+        Cobj.symb(self.name, value)
+        self.rules()
+
+    def is_equal(self, line: Line):
+        if self.value is not None and line.value is not None and self.value == line.value:
+            return True
+        if self.is_ident(line):
+            return True
+        return Ceq.eq_exist(Eq(self.symb, line.symb))
+
     def is_ident(self, line: Line) -> bool:
-        if (self.v1.name == line.v1.name and str(self.v2) == str(line.v2)):
+        if self.name == line.name:
             return True
         return False
 
@@ -91,7 +115,7 @@ class Line:
 
     def get_other(self, point):
         if str(point) == self.v1.name:
-            return self.v2.name
+            return str(self.v2)
         else:
             return self.v1.name
 
@@ -101,7 +125,7 @@ class Line:
         if len(self.points) > len(line.points):
             return False
         for idx, p in enumerate(line.points):
-            if self.points == line.points[idx : len(self.points)]:
+            if self.points == line.points[idx : idx + len(self.points)]:
                 return True
         return False
     
@@ -122,8 +146,8 @@ class Line:
 
     def is_cont(self, line: Line) -> bool:
 
-        if self.is_ray or line.is_ray:
-            return False
+        # if self.is_ray or line.is_ray:
+        #     return False
         
         if self.is_ident(line):
             return False
@@ -131,7 +155,7 @@ class Line:
         #if self.v1.name == line.v2.name or self.v2.name == line.v1.name:
         c_points = self.get_common_points(line)
         if len(c_points) == 1:
-            p1, p2, p3 = self.join_vertexs(line)
+            p1, p2, p3 = self.connect_points(line)
             return Line.is_points_in_line([p1, p2, p3])
         return False
 
@@ -163,6 +187,7 @@ class Line:
             points = [points]
 
         root = self.get_root()
+        points.reverse()
         for point in points:
             if self.point_exist(point): 
                 continue
@@ -186,18 +211,34 @@ class Line:
                 root = line
         return root   
 
-    def join_vertexs(self, line: Line) -> str:
+    def add_midpoint(self, midpoint: str):
+        self.m_p = midpoint
+        self.add_point(midpoint)
+        Line(self.name[0]+midpoint).set_equal(Line(midpoint+self.name[1]))
+        # => trung tuyến tam giác
+        tri = self.get_triangle()
+        if tri is not None:
+            from_v = tri.get_other_vertexs(self.name)
+            tri.set_median(from_v, midpoint)
+        
+    def get_triangle(self):
+        for p in Cobj.points.values():
+            tri_name = str(p) + self.name
+            if Cobj.triangle_exist(tri_name):
+                return Cobj.get_triangle(tri_name)
+        return None
+
+    def connect_points(self, line: Line) -> str:
         # if not self.is_connect(line):
         #     return None
         c_points = self.get_common_points(line)
         if len(c_points) != 1:
             return False
         c_p = c_points[0]
-        if c_p == self.v2.name:
+        if c_p == str(self.v2):
             return self.get_other(c_p) , c_p , line.get_other(c_p)
         else:
             return line.get_other(c_p) , c_p , self.get_other(c_p)
-       
 
 
 # Rule nội tại
@@ -216,10 +257,12 @@ class Line:
 #                     if not Cobj.triangle_exist(tri_name):
 #                         Triangle(tri_name)
 
-# tạo góc từ 2 cạnh
+
 def rule_01(a: Line):
-    from angle import Angle
-    for b in list(Cobj.lines.values()):
-        if a.is_connect(b):
-            A, B, C = a.join_vertexs(b)
-            Angle(A+B+C)
+    if a.value is not None:
+        for b in list(Cobj.lines.values()):
+            if b.value is not None and b.value == a.value:
+                Ceq(a.symb, b.symb)
+                    
+
+

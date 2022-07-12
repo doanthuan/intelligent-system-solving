@@ -34,5 +34,5 @@ class Relation:
     def __str__(self):
         text = f"{self.left} {self.name}"
         if self.right is not None:
-            text += f"{self.right}"
+            text += f" {self.right}"
         return text
