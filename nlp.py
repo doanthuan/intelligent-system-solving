@@ -158,11 +158,11 @@ def text_preprocess(document):
     document = ViTokenizer.tokenize(document)
     #document = word_tokenize(document, format="text")
     # đưa về lower
-    document = document.lower()
+    # document = document.lower()
     # xóa các ký tự không cần thiết
     #document = re.sub(r'[^\s\wáàảãạăắằẳẵặâấầẩẫậéèẻẽẹêếềểễệóòỏõọôốồổỗộơớờởỡợíìỉĩịúùủũụưứừửữựýỳỷỹỵđ_]',' ',document)
     # xóa khoảng trắng thừa
     document = re.sub(r'\s+', ' ', document).strip()
     document = document.replace(".","")
-    return document.split(" ")
+    return document
  

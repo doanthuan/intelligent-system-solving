@@ -8,38 +8,38 @@ from cobj import Cobj
 if __name__ == "__main__":
     from angle import Angle
 
-    '''
-    Bài 2 - 137 - HH 7
-    '''
-    program = Program()
-    # Cho tam giác ABC
-    program.set_triangle("ABC")
-    # Với góc A
-    program.set_angle("ABC", "A", 60)
-    # Với góc C
-    program.set_angle("ABC", "C", 50)
-
-    ## tia phân giác góc B của tam giác ABC, cắt cạnh đối diện tại D
-    program.set_bisector_in('ABC', 'B','D')
-
-    # xác định góc ADB và CDB
-    program.add_goal(1 , ("ANGLE", "ADB"))
-    program.add_goal(1 , ("ANGLE", "CDB"))
-
-    program.solve()
-
     # '''
-    # Bài 2
+    # Bài 2 - 137 - HH 7
     # '''
-    # program2 = Program()
-    # program2.set_triangle("ABC")
+    # program = Program()
+    # # Cho tam giác ABC
+    # program.set_triangle("ABC")
+    # # Với góc A
+    # program.set_angle("ABC", "A", 60)
+    # # Với góc C
+    # program.set_angle("ABC", "C", 50)
 
-    # program2.set_ray('ABC', 'B', 'M', 'K')
+    # ## tia phân giác góc B của tam giác ABC, cắt cạnh đối diện tại D
+    # program.set_bisector_in('ABC', 'B','D')
 
-    # program2.add_goal(2 , ("ANGLE", "AMK", "ABK")) # So sánh
-    # #solver2.add_goal(2 , ("ANGLE", "AMC", "ABC")) # So sánh
+    # # xác định góc ADB và CDB
+    # program.add_goal(1 , ("ANGLE", "ADB"))
+    # program.add_goal(1 , ("ANGLE", "CDB"))
 
-    # program2.solve()
+    # program.solve()
+
+    '''
+    Bài 2
+    '''
+    program2 = Program()
+    program2.set_triangle("ABC")
+
+    program2.set_ray('ABC', 'B', 'M', 'K')
+
+    program2.add_goal(2 , ("ANGLE", "AMK", "ABK")) # So sánh
+    #solver2.add_goal(2 , ("ANGLE", "AMC", "ABC")) # So sánh
+
+    program2.solve()
 
     # '''
     # Bài 3

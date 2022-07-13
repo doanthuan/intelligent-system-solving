@@ -170,7 +170,6 @@ def rule_15(A: Triangle):
 
 class Crule:
     #c_line, c_angle, c_triangle = 0, 0, 0
-    c_obj = 0
 
     cached = []
 
@@ -213,8 +212,8 @@ class Crule:
 
         change = False
         g_count = Cobj.count()
-        if g_count > Crule.c_obj:
-            Crule.c_obj = g_count
+        if g_count > Cobj.c_obj:
+            Cobj.c_obj = g_count
             for rule_func in Crule.rules:
                 Crule.apply_rule(rule_func)
             change = True

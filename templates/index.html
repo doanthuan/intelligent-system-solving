@@ -14,14 +14,20 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-fQybjgWLrvvRgtW6bFlB7jaZrFsaBXjsOMm/tB9LTS58ONXgqbR9W8oWht/amnpF" crossorigin="anonymous"></script>
   </head>
   <body>
-    <br/><br/>
+    <br/>
       <div class="container">
         <h1>Hệ Giải Bài Tập Hình Học Phẳng - Đoàn Vũ Thuận CH1901013</h1>
         <br/>
         <form id="theForm">
             <div class="form-group">
+                <label for="hypo" class="form-label">Các Dạng Bài Mẫu:</label>
+                <div><a href="#" class="ex">Bài 2</a> <a href="#" class="ex">Bài 3</a> 
+                ( Sách Bài Tập Hình Học Lớp 7)
+                </div>
+            </div>
+            <div class="form-group">
                 <label for="hypo" class="form-label">Giả Thuyết:</label>
-                <textarea class="form-control" id="hypo" name="hypo" rows="5">Cho tam giác ABC có góc A = 60 độ, góc C = 50 độ. Tia phân giác của góc B cắt AC ở D. 
+                <textarea class="form-control" id="hypo" name="hypo" rows="4">Cho tam giác ABC có góc A = 60 độ, góc C = 50 độ. Tia phân giác của góc B cắt AC ở D. 
                 </textarea>
             </div>
             <div class="form-group">
@@ -30,11 +36,11 @@
                 </textarea>
             </div>
 
-            <button type="submit" class="btn btn-primary" id="submit">Submit</button>
+            <button type="submit" class="btn btn-primary" id="submit">Bắt Đầu Giải</button>
             <br/><br/>
             <div class="form-group">
                 <label for="answer" class="form-label">Lời Giải:</label>
-                <textarea class="form-control" id="answer" rows="10">
+                <textarea class="form-control" id="answer" rows="12">
 
 
                 </textarea>
@@ -48,6 +54,7 @@
             console.log( "ready!" );
             //$("#theForm").ajaxForm({url: '/solve', type: 'post'})
             $("#theForm").submit(function (event) {
+                $("#answer").text("");
                 var formData = {
                     hypo: $("#hypo").val(),
                     question: $("#question").val()
@@ -65,6 +72,17 @@
                 });
 
                 event.preventDefault();
+            });
+
+            $( ".ex" ).click(function(e){
+                text = $(this).text()
+                id = text.replace("Bài ", "");
+                $.get( "/example/"+id, function( data ) {
+                    console.log(data)
+                    $("#hypo").val(data[0]);
+                    $("#question").val(data[1]);
+                    $("#answer").text("");
+                });
             });
         });
 

@@ -26,6 +26,7 @@ class Cobj:
 
     hypo = {}
     knowns = {}
+    c_obj = 0
     
     def symb(name, value = None, positive=True):
         # if type(value) in [int, float]:
@@ -55,10 +56,13 @@ class Cobj:
 
         Cobj.symbs = {}
         Cobj.eqs = []
+        Cobj.ieqs = []
         Cobj.relations = []
 
         Cobj.hypo = {}
         Cobj.knowns = {}
+
+        Cobj.c_obj = 0
 
     def count():
         return (len(Cobj.triangles) + len(Cobj.angles) + len(Cobj.lines) + len(Cobj.points) + len(Cobj.symbs)

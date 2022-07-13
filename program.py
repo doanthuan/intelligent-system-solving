@@ -32,6 +32,8 @@ class Program:
         # Tập KL
         self.goals = []
         self.answers = []
+
+        Cobj.reset_state()
     
     # Event functions
     def set_triangle(self, name):

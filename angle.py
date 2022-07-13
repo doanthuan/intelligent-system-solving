@@ -96,7 +96,8 @@ class Angle(object):
 
     def set_value(self, value):
         if value is not None:
-            self.value = int(str(value))
+            value = int(str(value))
+            self.value = value
             Cobj.symb(self.ident_symb(), value)
             if self.value > 90:
                 self.set_obtuse()
