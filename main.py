@@ -28,18 +28,18 @@ if __name__ == "__main__":
 
     # program.solve()
 
-    '''
-    Bài 2
-    '''
-    program2 = Program()
-    program2.set_triangle("ABC")
+    # '''
+    # Bài 2
+    # '''
+    # program2 = Program()
+    # program2.set_triangle("ABC")
 
-    program2.set_ray('ABC', 'B', 'M', 'K')
+    # program2.set_ray('ABC', 'B', 'M', 'K')
 
-    program2.add_goal(2 , ("ANGLE", "AMK", "ABK")) # So sánh
-    #solver2.add_goal(2 , ("ANGLE", "AMC", "ABC")) # So sánh
+    # program2.add_goal(2 , ("ANGLE", "AMK", "ABK")) # So sánh
+    # #solver2.add_goal(2 , ("ANGLE", "AMC", "ABC")) # So sánh
 
-    program2.solve()
+    # program2.solve()
 
     # '''
     # Bài 3
@@ -171,21 +171,21 @@ if __name__ == "__main__":
     # program.add_goal(1 , ("ANGLE", "FDE"))
     # program.solve()
 
-    # '''
-    # Bài 28 - Trang 141 - HH7
-    # '''
-    # program = Program()
-    # program.set_triangle("ABC")
-    # program.set_triangle("ADB")
-    # program.set_edge("AB", 3)
-    # program.set_edge("BC", 3)
-    # program.set_edge("CA", 3)
+    '''
+    Bài 28 - Trang 141 - HH7
+    '''
+    program = Program()
+    program.set_triangle("ABC")
+    program.set_triangle("ADB")
+    program.set_edge("AB", 3)
+    program.set_edge("BC", 3)
+    program.set_edge("CA", 3)
 
-    # program.set_edge("AD", 2)
-    # program.set_edge("DB", 2)
+    program.set_edge("AD", 2)
+    program.set_edge("DB", 2)
         
-    # program.add_goal(3 , Eq(Angle("CAD").symb, Angle("DBC").symb)) # chứng minh
-    # program.solve()
+    program.add_goal(3 , Eq(Angle("CAD").symb, Angle("DBC").symb)) # chứng minh
+    program.solve()
 
     # '''
     # Bài 32 - Trang 141 - HH7

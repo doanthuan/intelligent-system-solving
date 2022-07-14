@@ -207,28 +207,24 @@ class Triangle:
         elif self.medians[v] is not None: # trung tuyến -> tia phân giác, đường cao
             self.bisectors[v] = self.medians[v]
             self.heights[v] = self.medians[v]
+
+    def set_point(self, p):
+        self.points[p] = p
+        # nối 3 đỉnh
+        Line(self.name[0] + p)
+        Line(self.name[1] + p)
+        Line(self.name[2] + p)
         
     # Phát sinh sự kiện: tia từ 1 góc cắt cạnh đối diện tại 1 điểm
     def set_ray(self, from_v, m_v, to_v):
         
         v1, v2 = self.get_other_vertexs(from_v)
 
-        if m_v is not None:
-            self.points[m_v] = m_v
+        Line(v2+v1).add_point(to_v)
 
-            # tia đi qua điểm m_v
-            points = from_v + m_v
-            if to_v is not None:
-                points += to_v
-            Line.from_points(points)
+        Line.from_points(from_v + m_v + to_v)
 
-            # điểm to_v nằm trên đoạn thẳng v1 v2
-            if to_v is not None:
-                Line.from_points(v2 + to_v + v1)
-            
-            # nối 2 đỉnh còn lại
-            Line(v1 + m_v)
-            Line(v2 + m_v)
+
 
     def set_bisector_out(self, from_v, ray_name):
         v1, v2 = self.get_other_vertexs(from_v)
@@ -251,24 +247,19 @@ class Triangle:
             self.e2.set_equal(tri.e2)
             self.e3.set_equal(tri.e3)
 
-            # 3 angles
-            self.a1.set_equal(tri.a1)
-            self.a2.set_equal(tri.a2)
-            self.a3.set_equal(tri.a3)
-        else: # by edges
-            # self.e1.set_equal(tri.edges[v1])
-            # self.e2.set_equal(tri.edges[v2])
-            # self.e3.set_equal(tri.edges[v3])
+            v1 = tri.v1.name
+            v2 = tri.v2.name
+            v3 = tri.v3.name
 
-            rel = Relation.make("TG_BANG_NHAU", self, tri)
-            eq1 = self.a1.set_equal(tri.angles[v1])
-            Log.trace_obj(eq1, "(Definition)", [rel])
-            eq2 = self.a2.set_equal(tri.angles[v2])
-            Log.trace_obj(eq2, "(Definition)", [rel])
-            eq3 = self.a3.set_equal(tri.angles[v3])
-            Log.trace_obj(eq3, "(Definition)", [rel])
+        rel = Relation.make("TG_BANG_NHAU", self, tri)
+        eq1 = self.a1.set_equal(tri.angles[v1])
+        Log.trace_obj(eq1, "(Definition)", [rel])
+        eq2 = self.a2.set_equal(tri.angles[v2])
+        Log.trace_obj(eq2, "(Definition)", [rel])
+        eq3 = self.a3.set_equal(tri.angles[v3])
+        Log.trace_obj(eq3, "(Definition)", [rel])
 
-            return rel
+        return rel
 
 
 #RULE1: A + B + C = 180 độ

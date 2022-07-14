@@ -85,10 +85,12 @@ class Angle(object):
     
     def set_equal(self, angle: Angle):
         eq = Ceq(self.symb, angle.symb)
-        if angle.value is not None:
+        if angle.value is not None and self.value is None:
             self.set_value(angle.value)
-        elif self.value is not None:
+            Log.trace_symbol(self.symb, eq)
+        elif self.value is not None and angle.value is None:
             angle.set_value(self.value)
+            Log.trace_symbol(angle.symb, eq)
 
         self.rules()
         return eq
@@ -179,9 +181,11 @@ class Angle(object):
 '''
 RULES Nội Tại
 '''
-# 2 góc bằng nhau => tam giác cân, 3 góc => đều
 def rule_01(A: Angle):
     if A.value is not None:
         for B in Cobj.angles.values():
             if B.value is not None and B.value == A.value:
                 Ceq(A.symb, B.symb)
+            if B.value is None and Ceq.eq_exist(Eq(A.symb, B.symb)):
+                B.set_value(A.value)
+                Log.trace_symbol(B.symb, Eq(A.symb, B.symb))

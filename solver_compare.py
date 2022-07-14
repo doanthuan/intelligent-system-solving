@@ -167,7 +167,7 @@ class SolverCompare:
         for path in paths:
             results, logs = self.solve_path(path)
 
-            logs.append(("\nPath:", path))
+            #logs.append(("\nPath:", path))
 
             x = simplify(symbol_1 - results[str(symbol_2)])
             

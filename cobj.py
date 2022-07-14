@@ -43,7 +43,7 @@ class Cobj:
         if name not in Cobj.symbs.keys():
             Cobj.symbs[name] = symbols(name, positive=positive)
         if type(value) in [int, float]:
-            Cobj.hypo[name] = value
+            #Cobj.hypo[name] = value
             Cobj.knowns[name] = value
         
         return Cobj.symbs[name]
@@ -77,6 +77,11 @@ class Cobj:
         if tri_name is not None:
             return Cobj.triangles[tri_name]
 
+    def get_triangle_by_point(p):
+        for tri in Cobj.triangles.values():
+            if p in tri.name:
+                return tri
+
     
     def triangle_exist(name: str):
         triangle = Cobj.get_triangle(name)
@@ -99,12 +104,18 @@ class Cobj:
     def get_angle(name: str):
         angle_name = Cobj.get_angle_name(name)
         return Cobj.angles[angle_name]
-
     
     def get_angle_name(name):
-        triangle = Cobj.get_triangle(name)
+
+        if len(name) == 1:
+            triangle = Cobj.get_triangle_by_point(name)
+            v = name
+        elif len(name) == 3:
+            triangle = Cobj.get_triangle(name)
+            v = name[1]
+
         if triangle is not None:
-            angle_name = triangle.angle_name(name[1])
+            angle_name = triangle.angle_name(v)
         else:
             angle_name = name
         return angle_name

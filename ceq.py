@@ -32,6 +32,10 @@ class Ceq:
                 return True
         return False
 
+    def is_equal(symb1, symb2):
+        eq = Eq(symb1, symb2)
+        return Ceq.eq_exist(eq)
+
     def ieq_exist(expr):
         for ieq in Cobj.ieqs:
             if ieq == True or ieq == False:

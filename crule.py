@@ -143,10 +143,10 @@ def rule_14(A: Angle, B: Angle):
         tri = Triangle(A.name)
         if C.value is not None and B.value == C.value:
             rel = tri.set_equilateral() # Tam giác đều
-            Log.trace_obj(rel, "angle:rule_02", ["3 góc bằng nhau"] )
+            Log.trace_obj(rel, "rule_14", ["3 góc bằng nhau"] )
         else:
             rel = tri.set_isosceles(C.name[1]) # Tam giác cân
-            Log.trace_obj(rel, "angle:rule_02", ["2 góc bằng nhau"] )
+            Log.trace_obj(rel, "rule_14", ["2 góc bằng nhau"] )
 
 
 
@@ -168,12 +168,31 @@ def rule_15(A: Triangle):
                 Log.trace_obj(rel, "rule_15", [f"{A.e1}={ej} {A.e2}={B.edges[j_v1]} {A.e3}={B.edges[j_v2]}"] )
                 break
 
+def rule_16(eq1: Eq, eq2: Eq):
+    if (len(eq1.lhs.free_symbols) == len(eq2.lhs.free_symbols) == 2) and (len(eq1.rhs.free_symbols) == len(eq2.rhs.free_symbols) == 1):
+        a1 = list(eq1.lhs.free_symbols)[0]
+        a2 = list(eq1.lhs.free_symbols)[1]
+        b1 = list(eq2.lhs.free_symbols)[0]
+        b2 = list(eq2.lhs.free_symbols)[1]
+        if (Ceq.is_equal(a1, b1) and Ceq.is_equal(a2, b2)):
+            eq = Eq(list(eq1.rhs.free_symbols)[0], list(eq2.rhs.free_symbols)[0])
+            if not Ceq.eq_exist(eq):
+                Cobj.eqs.append(eq)
+                Log.trace_obj(eq, "rule_16", [f"{a1}={b1} & {a2}={b2}"] )
+        if (Ceq.is_equal(a1, b2) and Ceq.is_equal(a2, b1)):
+            eq = Eq(list(eq1.rhs.free_symbols)[0], list(eq2.rhs.free_symbols)[0])
+            if not Ceq.eq_exist(eq):
+                Cobj.eqs.append(eq)
+                Log.trace_obj(eq, "rule_16",  [f"{a1}={b1} & {a2}={b2}"] )
+
+
+
 class Crule:
     #c_line, c_angle, c_triangle = 0, 0, 0
 
     cached = []
 
-    rules = [rule_01, rule_02, rule_03, rule_04, rule_05, rule_06, rule_08, rule_09, rule_10, rule_11, rule_12, rule_13, rule_14, rule_15]
+    rules = [rule_01, rule_02, rule_03, rule_04, rule_05, rule_06, rule_08, rule_09, rule_10, rule_11, rule_12, rule_13, rule_14, rule_15, rule_16]
     # line_rules = [rule_01]
     # angle_rules = [rule_02, rule_03, rule_04, rule_05, rule_06 ]
     # triangle_rules = [ rule_08, rule_09 ]
@@ -248,6 +267,8 @@ class Crule:
                 func_args.append(list(Cobj.angles.values()))
             if 'Triangle' in str(arg):
                 func_args.append(list(Cobj.triangles.values()))
+            if 'Eq' in str(arg):
+                func_args.append(Cobj.eqs)
         return func_args
 
 

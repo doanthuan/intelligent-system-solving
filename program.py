@@ -42,18 +42,17 @@ class Program:
     def set_triangle_equal(self, tri1_name, tri2_name):
         tri1 = Triangle(tri1_name)
         tri2 = Triangle(tri2_name)
-        tri1.set_equal(tri2)
+        rel = tri1.set_equal(tri2)
+        Log.trace_obj(rel, "rule_15", [f"From Hypo"] )
 
     # def set_angle(self, name, value):
     #     Angle(name, value)
 
-    def set_angle(self, tri_name, angle, value):
-        triangle = Cobj.get_triangle(tri_name)
-        if triangle is None:
-            raise Exception("Set Angle error. Could not find triangle")
+    def set_angle(self, angle_name, value):
+        angle = Cobj.get_angle(angle_name)
+        angle.set_value(value)
+        Cobj.hypo[angle.name] = value
 
-        triangle.set_angle(angle, value)
-    
     def unset_angle(self, name):
         Cobj.unset_angle(name)
 
@@ -91,7 +90,15 @@ class Program:
 
         triangle.set_height(from_v, to_v)
 
-    def set_ray(self, tri_name, from_v, m_v, to_v = None):
+    def set_point(self, tri_name, p):
+        triangle = Cobj.get_triangle(tri_name)
+        if triangle is None:
+            raise Exception("Set RAY error. Could not find triangle")
+
+        # vẽ tia từ đỉnh qua điểm m, cắt đối diện tại to_v
+        triangle.set_point(p)
+
+    def set_ray(self, tri_name, from_v, m_v, to_v ):
         triangle = Cobj.get_triangle(tri_name)
         if triangle is None:
             raise Exception("Set RAY error. Could not find triangle")
@@ -120,6 +127,7 @@ class Program:
                             raise Exception("Goal DETERMINE ANGLE error. Goal data must have 2 arguments")
 
                         angle = Cobj.get_angle(goal_data[1])
+                        
                         logs = Cokb.solve(angle.symb)
                         self.answers.append(logs)
                         #Log.print_logs(logs)
@@ -146,8 +154,12 @@ class Program:
                     if goal_data[0] != "ANGLE" or len(goal_data) != 2:
                         raise Exception("Goal FIND-ANGLE-COMPARE error. Goal data must have 2 arguments")
 
-                    angle = Cobj.get_angle(goal_data[1])
-                    logs = Cokb.solve_find_compare(angle.symb)
+                    if len(goal_data[1]) == 1:
+                        tri = Cobj.get_triangle("ABC")
+                        angle = tri.angles[goal_data[1]]
+                    else:
+                        angle = Cobj.get_angle(goal_data[1])
+                    logs = Cokb.solve_find_compare(angle.symb, True)
                     self.answers.append(logs)
 
                 # if goal.goal_type == 5: # chứng minh

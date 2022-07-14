@@ -15,21 +15,6 @@ from angle import Angle
 
 
 class Cokb:
-       
-    def solve_unknown():
-        unknowns = list(Cobj.get_unknown().values())
-        eqs = Cobj.subs_eqs_with_hypo()
-        if len(eqs) < len(unknowns):
-            return False # num var > num eq -> can not solve
-
-        result = solve(eqs, unknowns)
-        if len(result) > 0:
-            for sol_symbol, value in result.items():
-                Cobj.knowns[str(sol_symbol)] = value
-                Log.trace_symbols[str(sol_symbol)] = Cobj.get_rel_equations(sol_symbol)
-            return True
-        else:
-            return False
     
     def solve_equation(a_eq):
         sol_symbol = None
@@ -48,11 +33,25 @@ class Cokb:
             return None, None
 
         Cobj.knowns[str(sol_symbol)] = sol_value[0]
-
-        #trace symbol
-        Log.trace_symbols[str(sol_symbol)] = a_eq
+        #Log.trace_symbols[str(sol_symbol)] = a_eq
+        Log.trace_symbol(sol_symbol, a_eq)
 
         return sol_symbol, sol_value[0]
+
+    def solve_unknown():
+        unknowns = list(Cobj.get_unknown().values())
+        eqs = Cobj.subs_eqs_with_hypo()
+        if len(eqs) < len(unknowns):
+            return False # num var > num eq -> can not solve
+
+        result = solve(eqs, unknowns)
+        if len(result) > 0:
+            for sol_symbol, value in result.items():
+                Cobj.knowns[str(sol_symbol)] = value
+                Log.trace_symbol(sol_symbol, Cobj.get_rel_equations(sol_symbol))
+            return True
+        else:
+            return False
 
     # lan truyền
     def bfs():
@@ -80,19 +79,21 @@ class Cokb:
             return Log.logs
 
         if isinstance(target, Relation) and Relation.exist(target):
-            Log.print_trace_objs(target)
+            Log.print_trace_objs(target, False)
             return Log.logs
 
-        if isinstance(target, Eq) and Cobj.equation_true(target):
-            Log.log(f"TARGET: {target}")
-            for a_symbol in target.free_symbols:
-                Log.print_trace_symbols(a_symbol)
-            return Log.logs
+        if isinstance(target, Eq):
+            if Cobj.equation_true(target):
+                Log.log(f"TARGET: {target}")
+                for a_symbol in target.free_symbols:
+                    Log.print_trace_symbols(a_symbol, False)
+                #Log.print_trace_objs(target, False)
+                return Log.logs
 
         return []
 
     def solve_find_compare(target, ret = False):
-        results = {}
+        # results = {}
         eqs = Cobj.subs_eqs_with_hypo()
         solver = SolverCompare(Cobj.symbs, eqs)
 
@@ -110,6 +111,7 @@ class Cokb:
                     Log.print_logs(logs)
                     return logs
                 else:
-                    results[str(a_symbol)] = result
+                    # results[str(a_symbol)] = result
+                    return logs
 
-        return results
+        # return results

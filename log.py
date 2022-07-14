@@ -13,6 +13,9 @@ class Log:
     def reset():
         Log.logs = []
 
+    def trace_symbol(sol_symbol, eqs):
+        Log.trace_symbols[str(sol_symbol)] = eqs
+
     def print_trace_symbols(cur_symb, p=True):
         if type(cur_symb) != str:
             cur_symb = str(cur_symb)
@@ -24,12 +27,13 @@ class Log:
             for a_symbol in eq.free_symbols:
                     if str(a_symbol) != cur_symb and str(a_symbol) not in Cobj.hypo.keys():
                         Log.print_trace_symbols(str(a_symbol), p)
-            Log.log(f"{eq} => {cur_symb} =  {Cobj.knowns[str(cur_symb)]}")
+            Log.print_trace_objs(eq, p)
+            Log.log(f" => {cur_symb} =  {Cobj.knowns[str(cur_symb)]}")
 
         elif isinstance(eq, list):
             #Log.log("From multiple equations:")
             for a_eq in eq:
-                Log.print_trace_objs(a_eq)
+                Log.print_trace_objs(a_eq, p)
                 #Log.log(f"{a_eq}")
             Log.log(f" => {cur_symb} =  {Cobj.knowns[str(cur_symb)]}")
 
@@ -67,9 +71,10 @@ class Log:
             print(*texts)
     
     def print_logs(logs):
-        while len(logs) > 0:
-            texts = logs.pop(0)
-            print(*texts)
+        p_logs = deepcopy(logs)
+        while len(p_logs) > 0:
+            texts = p_logs.pop(0)
+            print(texts)
 
     def trace_obj(object, rule_id, inputs):
         if type(inputs) != list:
@@ -82,11 +87,12 @@ class Log:
             new_obj, rule_id, inputs = trace_obj
             if (
                 (isinstance(target, Relation) and isinstance(new_obj, Relation) and target.equal(new_obj)) or
-                (issubclass(type(target), Relational) and issubclass(type(new_obj), Relational) and target.equals(new_obj))
+                (issubclass(type(target), Relational) and issubclass(type(new_obj), Relational) and target.equals(new_obj)) or
+                (isinstance(target, Eq) and isinstance(new_obj, Eq) and target == new_obj)
             ):
                 return trace_obj
     
-    def print_trace_objs(target):
+    def print_trace_objs(target, p=True):
         trace_obj = Log.get_trace_obj(target)
         if trace_obj is not None:
             new_obj, rule_id, inputs = trace_obj
@@ -94,10 +100,10 @@ class Log:
                 if isinstance(input, Eq):
                     symbs = Cobj.not_in_hypo(input.free_symbols)
                     for a_symb in symbs:
-                        Log.print_trace_symbols(a_symb)
+                        Log.print_trace_symbols(a_symb, p)
                     Log.log(f"=> {input} ({idx+1})")
                 elif isinstance(input, Relation) or issubclass(type(input), Relational):
-                    Log.print_trace_objs(input)
+                    Log.print_trace_objs(input, p)
                     #Log.log_inline(f"({idx+1})")
                 else:
                     Log.log(f"{input} ({idx+1})")
@@ -105,6 +111,6 @@ class Log:
             Log.log("From:",' '.join(froms))
             Log.log_inline(f" ({rule_id})=> {target}")
         else:
-            print(target)
-
-        Log.prints()
+            Log.log(f"{target}")
+        if p:
+            Log.prints()
