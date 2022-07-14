@@ -1,4 +1,4 @@
-from pyvi import ViTokenizer, ViPosTagger
+#from pyvi import ViTokenizer, ViPosTagger
 from underthesea import word_tokenize, sent_tokenize
 import regex as re
 

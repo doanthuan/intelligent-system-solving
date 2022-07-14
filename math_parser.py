@@ -1,6 +1,6 @@
-from numpy import mat
 from sympy import Eq
-from underthesea import word_tokenize, sent_tokenize
+#from underthesea import word_tokenize, sent_tokenize
+from nltk import sent_tokenize
 from angle import Angle
 from cobj import Cobj
 from nlp import text_preprocess
@@ -61,7 +61,7 @@ class MathParser:
             tri_name = match[0]
             self.program.set_triangle(tri_name)
             self.context = tri_name
-            if len(match) == 3:
+            if len(match) == 3 and match[2] != '':
                  tri_name = match[2]
                  self.program.set_triangle(tri_name)
         return True

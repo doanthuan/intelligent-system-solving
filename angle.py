@@ -15,13 +15,6 @@ from relation import Relation
 
 class Angle(object):
 
-    @staticmethod
-    def third_angle(angle1: Angle, angle2: Angle):
-        if angle1.line2.is_ident(angle2.line1) and angle1.name[0] == angle2.name[2]:
-            return Angle(angle2.name[1]+angle2.name[2]+angle1.name[1])
-        if angle2.line2.is_ident(angle1.line1) and angle2.name[0] == angle1.name[2]:
-            return Angle(angle1.name[1]+angle1.name[2]+angle2.name[1])
-
     def __new__(cls, name, value = None):
         #obj = Symbol.__new__(cls, name, positive=True)
 
@@ -48,6 +41,13 @@ class Angle(object):
     def rules(self):
         if self.value is not None:
             rule_01(self)
+
+    @staticmethod
+    def third_angle(angle1: Angle, angle2: Angle):
+        if angle1.line2.is_ident(angle2.line1) and angle1.name[0] == angle2.name[2]:
+            return Angle(angle2.name[1]+angle2.name[2]+angle1.name[1])
+        if angle2.line2.is_ident(angle1.line1) and angle2.name[0] == angle1.name[2]:
+            return Angle(angle1.name[1]+angle1.name[2]+angle2.name[1])
 
     def is_triangle(self, angle2: Angle):
         if self.line2.is_ident(angle2.line1) and self.name[0] == angle2.name[2]:
